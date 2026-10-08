@@ -6,10 +6,8 @@ in the browser from the raw data; there are no prepared answers.
 
 ## What it covers
 
-Classical probability, the addition and multiplication rules, conditional
-probability, independence (including mutual independence of three events),
-drawing without replacement, total probability and Bayes' theorem, several
-independent events, and random variables with their distributions.
+Classical probability, complements, the addition rule, conditional probability,
+the definition of independent events, and distributions of random variables.
 
 ## Running locally
 

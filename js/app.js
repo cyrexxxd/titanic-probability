@@ -27,18 +27,6 @@
   const state = {
     evA: Object.assign(defaultEvent(), { survived: '1' }),
     evB: Object.assign(defaultEvent(), { sex: 'F' }),
-    evC: null, // null = C not defined
-    drawGroup: 0,
-    drawK: 3,
-    bayesPart: 'pclass',
-    bayesEv: '1',
-    boat: [
-      { pclass: '1', sex: 'F', ageGroup: 'any' },
-      { pclass: '3', sex: 'M', ageGroup: 'adult' },
-      { pclass: 'any', sex: 'any', ageGroup: 'child' }
-    ],
-    streakGroup: 1,
-    streakN: 10,
     famFilter: 'all'
   };
 
@@ -188,8 +176,6 @@
     alone: { '1': 'travelling alone', '0': 'travelling with family' }
   };
 
-  const DEFAULT_C = { pclass: 'any', sex: 'any', ageGroup: 'any', survived: 'any', embarked: 'S', alone: 'any' };
-
   function evPred(ev) {
     return function (r) {
       if (ev.pclass !== 'any' && String(r.pclass) !== ev.pclass) return false;
@@ -234,21 +220,6 @@
 
   /* ================= SVG charts ================= */
 
-  function hbarChart(mount, items) {
-    const rowH = 26, labelW = 175, barW = 280, W = labelW + barW + 210;
-    const H = items.length * rowH + 8;
-    const svg = S('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'chart', role: 'img' });
-    items.forEach(function (it, i) {
-      const y = i * rowH + 5;
-      const w = Math.max(1.5, it.value * barW);
-      svg.append(TXT({ x: labelW - 8, y: y + 14, 'text-anchor': 'end' }, it.label));
-      svg.append(S('rect', { x: labelW, y: y + 3, width: w, height: 15, 'class': it.dim ? 'bar dim' : 'bar' }));
-      svg.append(TXT({ x: labelW + w + 8, y: y + 15, 'class': 'val' }, it.text));
-    });
-    mount.innerHTML = '';
-    mount.appendChild(svg);
-  }
-
   function vbarChart(mount, items, opts) {
     opts = opts || {};
     const W = opts.width || 620, padL = 46, padR = 12, padT = 24, padB = 34;
@@ -273,28 +244,6 @@
         svg.append(TXT({ x: padL + i * slot + slot / 2, y: Math.max(y - 5, 10), 'text-anchor': 'middle', 'class': 'val' }, it.text));
       }
     });
-    mount.innerHTML = '';
-    mount.appendChild(svg);
-  }
-
-  function lineChart(mount, values, opts) {
-    const W = 620, H = 240, padL = 52, padR = 14, padT = 16, padB = 34;
-    const maxV = Math.max.apply(null, values.concat([1e-9]));
-    const svg = S('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'chart', role: 'img' });
-    [0, 0.5, 1].forEach(function (f) {
-      const y = padT + (H - padT - padB) * (1 - f);
-      svg.append(S('line', { x1: padL, y1: y, x2: W - padR, y2: y, 'class': f === 0 ? 'axis' : 'guide' }));
-      svg.append(TXT({ x: padL - 6, y: y + 4, 'text-anchor': 'end' }, fmt(maxV * f, 4)));
-    });
-    const n = values.length;
-    const px = function (i) { return padL + (n === 1 ? 0 : i / (n - 1)) * (W - padL - padR); };
-    const py = function (v) { return padT + (1 - v / maxV) * (H - padT - padB); };
-    const d = values.map(function (v, i) { return (i ? 'L' : 'M') + px(i).toFixed(1) + ' ' + py(v).toFixed(1); }).join(' ');
-    svg.append(S('path', { d: d, 'class': 'line' }));
-    [0, Math.floor((n - 1) / 2), n - 1].forEach(function (i) {
-      svg.append(TXT({ x: px(i), y: H - padB + 16, 'text-anchor': 'middle' }, String(i + 1)));
-    });
-    svg.append(TXT({ x: padL + (W - padL - padR) / 2, y: H - 2, 'text-anchor': 'middle' }, 'n'));
     mount.innerHTML = '';
     mount.appendChild(svg);
   }
@@ -441,21 +390,6 @@
     wrapB.appendChild(eventSelect(state.evB, renderEvents));
     grid.append(wrapA, wrapB);
 
-    const cToggle = document.getElementById('cToggle');
-    const cWrap = h('div', { class: 'event-def' });
-    const descC = h('p', { class: 'ev-desc' });
-    cWrap.append(h('h4', { text: 'Event C' }), descC);
-    const evCStore = defaultEvent();
-    evCStore.embarked = 'S';
-    cWrap.appendChild(eventSelect(evCStore, function () { if (state.evC) renderEvents(); }));
-    const cControls = document.getElementById('cControls');
-    cControls.appendChild(cWrap);
-    cToggle.addEventListener('change', function () {
-      state.evC = cToggle.checked ? evCStore : null;
-      cControls.hidden = !cToggle.checked;
-      renderEvents();
-    });
-
     const presetRow = document.getElementById('presetRow');
     PRESETS.forEach(function (pr) {
       const b = h('button', { class: 'btn btn-small', type: 'button', text: pr.name });
@@ -482,11 +416,8 @@
     const evA = state.evA, evB = state.evB;
     const grid = document.getElementById('eventControls');
     const descs = Array.prototype.slice.call(grid.querySelectorAll('.ev-desc'));
-    const cDesc = document.querySelector('#cControls .ev-desc');
-    if (cDesc) descs[2] = cDesc;
     descs[0].textContent = 'A = {' + describeEvent(evA) + '}';
     descs[1].textContent = 'B = {' + describeEvent(evB) + '}';
-    if (descs[2]) descs[2].textContent = 'C = {' + describeEvent(state.evC || DEFAULT_C) + '}';
 
     const predA = evPred(evA), predB = evPred(evB);
     const nA = Prob.count(rows, predA);
@@ -531,7 +462,6 @@
 
     renderVerdicts(nA, nB, nAB, pA, pB, pAB);
     renderVenn(nA, nB, nAB, nNeither);
-    renderIndependence();
   }
 
   function pctCell(label, p, frac, strong) {
@@ -604,564 +534,11 @@
     mount.appendChild(svg);
   }
 
-  /* ================= section 3: conditional probability ================= */
-
-  const BAR_GROUPS = [
-    { label: '1st class · female', pred: function (r) { return r.pclass === 1 && r.sex === 'F'; } },
-    { label: '2nd class · female', pred: function (r) { return r.pclass === 2 && r.sex === 'F'; } },
-    { label: '1st class', pred: function (r) { return r.pclass === 1; } },
-    { label: 'child (< 18)', pred: function (r) { return r.ageGroup === 'child'; } },
-    { label: '2nd class · male', pred: function (r) { return r.pclass === 2 && r.sex === 'M'; } },
-    { label: '3rd class · female', pred: function (r) { return r.pclass === 3 && r.sex === 'F'; } },
-    { label: 'female', pred: function (r) { return r.sex === 'F'; } },
-    { label: 'age unknown', pred: function (r) { return r.ageGroup === 'unknown'; } },
-    { label: 'adult (≥ 18)', pred: function (r) { return r.ageGroup === 'adult'; } },
-    { label: '3rd class', pred: function (r) { return r.pclass === 3; } },
-    { label: 'male', pred: function (r) { return r.sex === 'M'; } },
-    { label: '2nd class', pred: function (r) { return r.pclass === 2; } },
-    { label: '1st class · male', pred: function (r) { return r.pclass === 1 && r.sex === 'M'; } },
-    { label: '3rd class · male', pred: function (r) { return r.pclass === 3 && r.sex === 'M'; } }
-  ];
-
-  const DRAW_GROUPS = [
-    { label: 'survivors', pred: function (r) { return r.survived === 1; } },
-    { label: 'female passengers', pred: function (r) { return r.sex === 'F'; } },
-    { label: 'male passengers', pred: function (r) { return r.sex === 'M'; } },
-    { label: '1st class', pred: function (r) { return r.pclass === 1; } },
-    { label: '2nd class', pred: function (r) { return r.pclass === 2; } },
-    { label: '3rd class', pred: function (r) { return r.pclass === 3; } },
-    { label: 'children', pred: function (r) { return r.ageGroup === 'child'; } },
-    { label: 'adults', pred: function (r) { return r.ageGroup === 'adult'; } },
-    { label: '1st-class women', pred: function (r) { return r.pclass === 1 && r.sex === 'F'; } },
-    { label: '3rd-class men', pred: function (r) { return r.pclass === 3 && r.sex === 'M'; } },
-    { label: 'embarked at Southampton', pred: function (r) { return r.embarked === 'S'; } },
-    { label: 'embarked at Queenstown', pred: function (r) { return r.embarked === 'Q'; } },
-    { label: 'travelling alone', pred: function (r) { return r.alone; } }
-  ];
-
-  function initConditional() {
-    // Part A: survival rate by group
-    const items = BAR_GROUPS.map(function (g) {
-      const n = Prob.count(rows, g.pred);
-      const ns = Prob.count(rows, function (r) { return g.pred(r) && r.survived === 1; });
-      return { label: g.label, n: n, ns: ns, p: Prob.p(ns, n) };
-    }).sort(function (a, b) { return b.p - a.p; });
-    hbarChart(document.getElementById('groupBars'), items.map(function (it) {
-      return { label: it.label, value: it.p, text: fmt(it.p) + '  (' + it.ns + ' / ' + it.n + ')' };
-    }));
-
-    // Part B: drawing without replacement
-    const controls = document.getElementById('drawControls');
-    const gsel = h('select');
-    DRAW_GROUPS.forEach(function (g, i) { gsel.append(h('option', { value: i, text: g.label })); });
-    gsel.value = state.drawGroup;
-    const ksel = h('select');
-    for (let k = 1; k <= 10; k++) ksel.append(h('option', { value: k, text: String(k) }));
-    ksel.value = state.drawK;
-    gsel.addEventListener('change', function () { state.drawGroup = +gsel.value; renderDraw(); });
-    ksel.addEventListener('change', function () { state.drawK = +ksel.value; renderDraw(); });
-    controls.append(
-      h('label', { class: 'control' }, [h('span', { text: 'Group A' }), gsel]),
-      h('label', { class: 'control' }, [h('span', { text: 'Draws k' }), ksel])
-    );
-    renderDraw();
-  }
-
-  function renderDraw() {
-    const g = DRAW_GROUPS[state.drawGroup];
-    const k = state.drawK;
-    const nA = Prob.count(rows, g.pred);
-    const out = document.getElementById('drawOut');
-    out.innerHTML = '';
-    if (nA === 0) {
-      out.append(h('p', { class: 'muted-line', text: 'No passengers match this group.' }));
-      return;
-    }
-    const chain = Prob.chainWithoutReplacement(nA, N, k);
-    const p0 = Prob.p(nA, N);
-    const withRep = Math.pow(p0, k);
-    const factors = chain.factors.map(function (f) { return fracTex(f.num, f.den); }).join('\\cdot');
-    out.append(pLine('P(\\text{all } k \\text{ draws in } A)=\\frac{' + nA + '}{' + N + '}\\cdot\\frac{' + (nA - 1) + '}{' + (N - 1) + '}\\cdots\\frac{' + (nA - k + 1) + '}{' + (N - k + 1) + '}=' + factors + '=' + fmt(chain.value) + pctTex(chain.value)));
-    out.append(pLine('P(\\text{all } k \\text{ draws in } A)=\\Big(' + fracTex(nA, N) + '\\Big)^{' + k + '}=' + fmt(p0) + '^{' + k + '}=' + fmt(withRep) + '\\quad(\\text{with replacement, independent draws})'));
-    const diffTxt = Math.abs(chain.value - withRep) < 5e-5
-      ? 'For this group and k the two experiments practically coincide.'
-      : 'The two values differ by ' + fmt(Math.abs(chain.value - withRep)) + ' here.';
-    let note = 'Without replacement the draws are dependent: every passenger removed from the list shrinks both the numerator and the denominator of the next factor. This is the chain form of the multiplication rule. ' +
-      diffTxt + ' As the list grows relative to k, the shrinking matters less and the two models converge.';
-    if (k > nA) note = 'k exceeds n(A): the group runs out of passengers, so the event is impossible and the chain product is 0, the clearest sign that the draws are dependent.';
-    out.append(h('p', { class: 'muted-line', text: note }));
-  }
-
-  /* ================= section 4: independence ================= */
-
-  function initIndependence() {
-    renderIndependence();
-  }
-
-  function evNotPred(pred) { return function (r) { return !pred(r); }; }
-
-  function renderIndependence() {
-    const predA = evPred(state.evA), predB = evPred(state.evB);
-    const predNA = evNotPred(predA), predNB = evNotPred(predB);
-    const nA = Prob.count(rows, predA), nB = Prob.count(rows, predB);
-    const pA = Prob.p(nA, N), pB = Prob.p(nB, N);
-
-    // 4.1 complements table
-    const ct = document.getElementById('compTable');
-    ct.innerHTML = '';
-    ct.append(h('caption', { text: 'Table 4.1. Combinations of A, B and their complements. Each row tests the definition P(X ∩ Y) = P(X)·P(Y) exactly, in whole numbers: n(X ∩ Y)·n(S) = n(X)·n(Y).' }));
-    ct.append(h('thead', {}, [h('tr', {}, [
-      h('th', { text: 'Events' }), h('th', { class: 'num', text: 'n(X ∩ Y)' }),
-      h('th', { class: 'num', text: 'P(X ∩ Y)' }), h('th', { class: 'num', text: 'P(X)·P(Y)' }),
-      h('th', { class: 'num', text: 'n(X ∩ Y)·n(S) vs n(X)·n(Y)' }), h('th', { text: 'Independent?' })
-    ])]));
-    const tb = h('tbody');
-    const pairs = [
-      ['A ∩ B', predA, predB, nA, nB],
-      ["A ∩ B′", predA, predNB, nA, N - nB],
-      ["A′ ∩ B", predNA, predB, N - nA, nB],
-      ["A′ ∩ B′", predNA, predNB, N - nA, N - nB]
-    ];
-    const abIndep = Prob.isIndependent(nA, nB, Prob.count(rows, function (r) { return predA(r) && predB(r); }), N);
-    pairs.forEach(function (row) {
-      const nXY = Prob.count(rows, function (r) { return row[1](r) && row[2](r); });
-      const pXY = Prob.p(nXY, N);
-      const pX = Prob.p(row[3], N), pY = Prob.p(row[4], N);
-      const prod = pX * pY;
-      const ok = Prob.isIndependent(row[3], row[4], nXY, N);
-      tb.append(h('tr', {}, [
-        h('td', { text: row[0] }),
-        h('td', { class: 'num', text: int(nXY) }),
-        h('td', { class: 'num', text: nXY + ' / ' + N + ' = ' + fmt(pXY) }),
-        h('td', { class: 'num', text: fmt(pX) + '·' + fmt(pY) + ' = ' + fmt(prod) }),
-        h('td', { class: 'num', text: int(nXY * N) + (ok ? ' = ' : ' ≠ ') + int(row[3] * row[4]) }),
-        h('td', {}, [h('span', { class: 'tick ' + (ok ? 'yes' : 'no'), text: ok ? '✓ yes' : '✗ no' })])
-      ]));
-    });
-    ct.append(tb);
-
-    const oldCap = document.getElementById('compCaption');
-    if (oldCap) oldCap.remove();
-    const caption = h('p', {
-      id: 'compCaption', class: 'muted-line',
-      text: abIndep
-        ? 'A and B from §2 are independent, and, as the lecture fact promises, so are the mixed pairs A ∩ B′, A′ ∩ B and A′ ∩ B′.'
-        : 'A and B from §2 are not independent, so the lecture fact makes no promise here; each mixed pair is checked on its own merits.'
-    });
-    const tableWrap = ct.parentNode; // .table-scroll
-    tableWrap.parentNode.insertBefore(caption, tableWrap.nextSibling);
-
-    // 4.2 three events
-    const evC = state.evC || DEFAULT_C;
-    const predC = evPred(evC);
-    const nC = Prob.count(rows, predC);
-    const pC = Prob.p(nC, N);
-    const cond = function (preds) {
-      return Prob.count(rows, function (r) { return preds.every(function (p) { return p(r); }); });
-    };
-    const cAB = cond([predA, predB]), cAC = cond([predA, predC]), cBC = cond([predB, predC]), cABC = cond([predA, predB, predC]);
-    const rows3 = [
-      ['P(A ∩ B) = P(A)·P(B)', Prob.p(cAB, N), pA * pB, cAB * N === nA * nB],
-      ['P(A ∩ C) = P(A)·P(C)', Prob.p(cAC, N), pA * pC, cAC * N === nA * nC],
-      ['P(B ∩ C) = P(B)·P(C)', Prob.p(cBC, N), pB * pC, cBC * N === nB * nC],
-      // n(A∩B∩C)·n(S)² = n(A)·n(B)·n(C): stays below 2^53, so the comparison is exact
-      ['P(A ∩ B ∩ C) = P(A)·P(B)·P(C)', Prob.p(cABC, N), pA * pB * pC, cABC * N * N === nA * nB * nC]
-    ];
-    const tt = document.getElementById('threeTable');
-    tt.innerHTML = '';
-    tt.append(h('caption', { text: 'Table 4.2. Mutual independence of A, B and C (C = {' + describeEvent(evC) + '}). All four conditions must hold.' }));
-    tt.append(h('thead', {}, [h('tr', {}, [
-      h('th', { text: 'Condition' }), h('th', { class: 'num', text: 'left side' }),
-      h('th', { class: 'num', text: 'right side' }), h('th', { text: 'Holds?' })
-    ])]));
-    const tb3 = h('tbody');
-    const flags = rows3.map(function (r3) {
-      const ok = r3[3];
-      tb3.append(h('tr', {}, [
-        h('td', { text: r3[0] }),
-        h('td', { class: 'num', text: fmt(r3[1]) }),
-        h('td', { class: 'num', text: fmt(r3[2]) }),
-        h('td', {}, [h('span', { class: 'tick ' + (ok ? 'yes' : 'no'), text: ok ? '✓ yes' : '✗ no' })])
-      ]));
-      return ok;
-    });
-    tt.append(tb3);
-    const verdict = document.getElementById('threeVerdict');
-    verdict.innerHTML = '';
-    let vText, vCls;
-    if (flags[0] && flags[1] && flags[2] && flags[3]) {
-      vText = 'Verdict: mutually independent: all four conditions hold exactly.';
-      vCls = 'ok';
-    } else if (flags[0] && flags[1] && flags[2]) {
-      vText = 'Verdict: pairwise independent only. The three pairwise conditions hold but the triple product fails. Pairwise independence does not imply mutual independence.';
-      vCls = 'no';
-    } else {
-      vText = 'Verdict: not independent: at least one pairwise condition already fails.';
-      vCls = 'no';
-    }
-    verdict.append(h('div', { class: 'verdict ' + vCls }, [h('p', { text: vText })]));
-  }
-
-  /* ================= section 5: total probability and Bayes ================= */
-
-  const PARTITIONS = {
-    pclass: {
-      label: 'Ticket class', groups: [
-        { v: '1', label: '1st class' }, { v: '2', label: '2nd class' }, { v: '3', label: '3rd class' }
-      ]
-    },
-    sex: {
-      label: 'Sex', groups: [
-        { v: 'F', label: 'Female' }, { v: 'M', label: 'Male' }
-      ]
-    },
-    ageGroup: {
-      label: 'Age group', groups: [
-        { v: 'child', label: 'Child (< 18)' }, { v: 'adult', label: 'Adult (≥ 18)' }, { v: 'unknown', label: 'Age unknown' }
-      ]
-    },
-    embarked: {
-      label: 'Port of embarkation', groups: [
-        { v: 'S', label: 'Southampton' }, { v: 'C', label: 'Cherbourg' }, { v: 'Q', label: 'Queenstown' }, { v: 'unknown', label: 'Port unknown' }
-      ]
-    }
-  };
-
-  function partPred(key, v) {
-    if (key === 'embarked' && v === 'unknown') return function (r) { return r.embarked === null; };
-    return function (r) { return String(r[key]) === v; };
-  }
-
-  function initBayes() {
-    const controls = document.getElementById('bayesControls');
-    const psel = h('select');
-    Object.keys(PARTITIONS).forEach(function (k) { psel.append(h('option', { value: k, text: PARTITIONS[k].label })); });
-    psel.value = state.bayesPart;
-    const esel = h('select', {}, [
-      h('option', { value: '1', text: 'E = {survived}' }),
-      h('option', { value: '0', text: 'E = {died}' })
-    ]);
-    esel.value = state.bayesEv;
-    psel.addEventListener('change', function () { state.bayesPart = psel.value; renderBayes(); });
-    esel.addEventListener('change', function () { state.bayesEv = esel.value; renderBayes(); });
-    controls.append(
-      h('label', { class: 'control' }, [h('span', { text: 'Partition H₁…Hₘ' }), psel]),
-      h('label', { class: 'control' }, [h('span', { text: 'Event E' }), esel])
-    );
-    renderBayes();
-  }
-
-  function renderBayes() {
-    const part = PARTITIONS[state.bayesPart];
-    const evLabel = state.bayesEv === '1' ? 'survived' : 'died';
-    const evPredFn = function (r) { return r.survived === (+state.bayesEv); };
-    const nE = Prob.count(rows, evPredFn);
-    const groups = part.groups.map(function (g) {
-      const predH = partPred(state.bayesPart, g.v);
-      const nH = Prob.count(rows, predH);
-      const nHE = Prob.count(rows, function (r) { return predH(r) && evPredFn(r); });
-      return {
-        label: g.label, nH: nH, prior: Prob.p(nH, N),
-        nHE: nHE, lik: Prob.p(nHE, nH), term: Prob.p(nHE, N)
-      };
-    });
-    const tp = Prob.totalProbability(groups.map(function (g) { return g.prior; }), groups.map(function (g) { return g.lik; }));
-    const post = Prob.bayes(groups.map(function (g) { return g.prior; }), groups.map(function (g) { return g.lik; }));
-
-    renderTree(groups, evLabel);
-    document.getElementById('treeCaption').textContent = 'Figure 5.1. Probability tree by ' + part.label.toLowerCase() + ': multiply along each path to get P(Hᵢ ∩ E).';
-
-    const out = document.getElementById('totalOut');
-    out.innerHTML = '';
-    const sumStr = tp.terms.map(function (t) { return fmt(t); }).join('+');
-    const termStr = groups.filter(function (g) { return g.nH > 0; }).map(function (g) {
-      return fracTex(g.nH, N) + '\\cdot' + fracTex(g.nHE, g.nH);
-    }).join('+');
-    out.append(pLine('P(E)=\\sum_i P(H_i)\\,P(E\\mid H_i)'));
-    out.append(pLine('P(\\text{' + evLabel + '})=' + termStr));
-    out.append(pLine('P(\\text{' + evLabel + '})=' + sumStr + '=' + fmt(tp.total) + pctTex(tp.total)));
-
-    // Bayes table
-    const bt = document.getElementById('bayesTable');
-    bt.innerHTML = '';
-    bt.append(h('caption', { text: 'Table 5.1. Total probability and Bayes’ theorem by ' + part.label.toLowerCase() + ' for E = {' + evLabel + '}. The last column is the posterior: the share of ' + (state.bayesEv === '1' ? 'survivors' : 'the dead') + ' coming from each group.' }));
-    bt.append(h('thead', {}, [h('tr', {}, [
-      h('th', { text: 'Hᵢ' }), h('th', { class: 'num', text: 'P(Hᵢ)' }),
-      h('th', { class: 'num', text: 'P(E | Hᵢ)' }), h('th', { class: 'num', text: 'P(Hᵢ)·P(E | Hᵢ)' }),
-      h('th', { class: 'num', text: 'P(Hᵢ | E)' })
-    ])]));
-    const tb = h('tbody');
-    let maxRatio = null, minRatio = null;
-    groups.forEach(function (g, i) {
-      const ratio = g.prior > 0 ? post[i] / g.prior : 0;
-      if (!maxRatio || ratio > maxRatio.ratio) maxRatio = { g: g, ratio: ratio, post: post[i] };
-      if (!minRatio || ratio < minRatio.ratio) minRatio = { g: g, ratio: ratio, post: post[i] };
-      tb.append(h('tr', {}, [
-        h('td', { text: g.label }),
-        h('td', { class: 'num' }, [g.nH + ' / ' + N + ' = ' + fmt(g.prior), h('span', { class: 'frac-note', text: 'prior' })]),
-        h('td', { class: 'num' }, [g.nH === 0 ? 'n/a' : g.nHE + ' / ' + g.nH + ' = ' + fmt(g.lik)]),
-        h('td', { class: 'num', text: fmt(tp.terms[i]) }),
-        h('td', { class: 'num' }, [fmt(post[i]) + ' (' + pct(post[i]) + ')', h('span', { class: 'frac-note', text: 'posterior' })])
-      ]));
-    });
-    tb.append(h('tr', { class: 'total' }, [
-      h('td', { text: 'Total' }),
-      h('td', { class: 'num', text: fmt(1) }),
-      h('td', { text: '' }),
-      h('td', { class: 'num', text: fmt(tp.total) }),
-      h('td', { class: 'num', text: fmt(1) })
-    ]));
-    bt.append(tb);
-
-    // narrative note
-    const note = document.getElementById('bayesNote');
-    note.textContent = 'Read the table left to right. The prior column is simply the composition of the passenger list; the posterior column is the composition of the ' +
-      (state.bayesEv === '1' ? 'survivors' : 'dead') + '. Bayes’ theorem is the bookkeeping that turns one into the other. ' +
-      'Given E = {' + evLabel + '}, the share of ' + minRatio.g.label + ' falls from a prior ' + fmt(minRatio.g.prior) + ' to a posterior ' + fmt(minRatio.post) +
-      ' (×' + fmt(minRatio.ratio, 2) + '), while ' + maxRatio.g.label + ' rises from ' + fmt(maxRatio.g.prior) + ' to ' + fmt(maxRatio.post) +
-      ' (×' + fmt(maxRatio.ratio, 2) + ').';
-
-    // verification
-    const ver = document.getElementById('bayesVerify');
-    ver.innerHTML = '';
-    const pEl = h('p');
-    tex(pEl, 'P(' + evLabel + ')=\\frac{n(' + evLabel + ')}{n(S)}=' + fracTex(nE, N) + '=' + fmt(Prob.p(nE, N)) + '\\quad\\text{(direct count)}', true);
-    ver.append(h('div', { class: 'verdict ' + (Math.abs(tp.total - Prob.p(nE, N)) < 1e-9 ? 'ok' : 'no') }, [
-      h('p', {}, [h('span', { class: 'v-title', text: 'Verification. ' }),
-        document.createTextNode('The total from the partition (' + fmt(tp.total) + ') equals the direct count n(E)/n(S) = ' + int(nE) + ' / ' + int(N) + ' = ' + fmt(Prob.p(nE, N)) + '. The partition is complete (every passenger falls in exactly one group), so the two must agree.')]),
-      pEl
-    ]));
-  }
-
-  function renderTree(groups, evLabel) {
-    const mount = document.getElementById('tree');
-    const per = 92, W = 580, H = groups.length * per + 16;
-    const svg = S('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'chart', role: 'img' });
-    const rootX = 24, midX = 235, leafX = 470;
-    const midY = H / 2;
-    svg.append(S('circle', { cx: rootX, cy: midY, r: 3.5, fill: 'var(--ink)' }));
-    groups.forEach(function (g, i) {
-      const gy = i * per + per / 2 + 8;
-      const eY = gy - 17, neY = gy + 17;
-      // edges
-      svg.append(S('line', { x1: rootX, y1: midY, x2: midX, y2: gy, stroke: 'var(--muted)', 'stroke-width': '1' }));
-      svg.append(S('line', { x1: midX, y1: gy, x2: leafX, y2: eY, stroke: 'var(--survived)', 'stroke-width': '1' }));
-      svg.append(S('line', { x1: midX, y1: gy, x2: leafX, y2: neY, stroke: 'var(--died)', 'stroke-width': '1' }));
-      svg.append(S('circle', { cx: midX, cy: gy, r: 3, fill: 'var(--accent)' }));
-      svg.append(S('circle', { cx: leafX, cy: eY, r: 3, fill: 'var(--survived)' }));
-      svg.append(S('circle', { cx: leafX, cy: neY, r: 3, fill: 'var(--died)' }));
-      // edge labels
-      svg.append(TXT({ x: (rootX + midX) / 2, y: (midY + gy) / 2 - 5, 'text-anchor': 'middle' }, fmt(g.prior)));
-      svg.append(TXT({ x: (midX + leafX) / 2, y: (gy + eY) / 2 - 4, 'text-anchor': 'middle', fill: 'var(--survived)' }, fmt(g.lik)));
-      svg.append(TXT({ x: (midX + leafX) / 2, y: (gy + neY) / 2 + 11, 'text-anchor': 'middle', fill: 'var(--died)' }, fmt(1 - g.lik)));
-      // node labels
-      svg.append(TXT({ x: midX + 8, y: gy - 6, 'class': 'val' }, g.label));
-      svg.append(TXT({ x: leafX + 10, y: eY + 4 }, 'E: ' + fmt(g.term)));
-      svg.append(TXT({ x: leafX + 10, y: neY + 4 }, 'E′: ' + fmt(g.prior - g.term)));
-    });
-    svg.append(TXT({ x: rootX - 4, y: midY - 10 }, 'root'));
-    svg.append(TXT({ x: leafX + 10, y: 14 }, 'E = {' + evLabel + '}'));
-    mount.innerHTML = '';
-    mount.appendChild(svg);
-  }
-
-  /* ================= section 6: several independent passengers ================= */
-
-  const BOAT_PROFILE_FIELDS = [
-    { key: 'pclass', label: 'Class', opts: [['any', 'Any class'], ['1', '1st class'], ['2', '2nd class'], ['3', '3rd class']] },
-    { key: 'sex', label: 'Sex', opts: [['any', 'Any sex'], ['F', 'Female'], ['M', 'Male']] },
-    { key: 'ageGroup', label: 'Age group', opts: [['any', 'Any age'], ['child', 'Child (< 18)'], ['adult', 'Adult (≥ 18)'], ['unknown', 'Age unknown']] }
-  ];
-
-  function profilePred(prof) {
-    return function (r) {
-      if (prof.pclass !== 'any' && String(r.pclass) !== prof.pclass) return false;
-      if (prof.sex !== 'any' && r.sex !== prof.sex) return false;
-      if (prof.ageGroup !== 'any' && r.ageGroup !== prof.ageGroup) return false;
-      return true;
-    };
-  }
-
-  function profileLabel(prof) {
-    const parts = [];
-    BOAT_PROFILE_FIELDS.forEach(function (f) {
-      if (prof[f.key] !== 'any') parts.push(f.opts.filter(function (o) { return o[0] === prof[f.key]; })[0][1].toLowerCase());
-    });
-    return parts.length ? parts.join(', ') : 'any passenger';
-  }
-
-  function profileProb(prof) {
-    const pred = profilePred(prof);
-    const n = Prob.count(rows, pred);
-    if (n === 0) return { n: 0, ns: 0, p: null };
-    const ns = Prob.count(rows, function (r) { return pred(r) && r.survived === 1; });
-    return { n: n, ns: ns, p: Prob.p(ns, n) };
-  }
-
-  function initBoat() {
-    document.getElementById('addBoat').addEventListener('click', function () {
-      if (state.boat.length >= 8) return;
-      state.boat.push({ pclass: 'any', sex: 'any', ageGroup: 'any' });
-      renderBoat();
-    });
-    renderBoat();
-  }
-
-  function renderBoat() {
-    const mount = document.getElementById('boatRows');
-    mount.innerHTML = '';
-    state.boat.forEach(function (prof, i) {
-      const row = h('div', { class: 'boat-row' });
-      row.append(h('span', { class: 'row-num', text: String(i + 1) }));
-      BOAT_PROFILE_FIELDS.forEach(function (f) {
-        const sel = h('select');
-        f.opts.forEach(function (o) { sel.append(h('option', { value: o[0], text: o[1] })); });
-        sel.value = prof[f.key];
-        sel.addEventListener('change', function () { prof[f.key] = sel.value; renderBoat(); });
-        row.append(h('label', { class: 'control' }, [h('span', { text: f.label }), sel]));
-      });
-      const info = profileProb(prof);
-      const pEl = h('span', { class: 'boat-p' });
-      if (info.p === null) {
-        pEl.append(h('span', { class: 'nodata', text: 'no data, excluded' }));
-      } else {
-        pEl.textContent = 'p' + (i + 1) + ' = ' + info.ns + ' / ' + info.n + ' = ' + fmt(info.p) + ' (' + pct(info.p) + ')';
-      }
-      row.append(pEl);
-      const rm = h('button', { class: 'btn btn-small btn-quiet', type: 'button', text: 'Remove' });
-      rm.disabled = state.boat.length <= 1;
-      rm.addEventListener('click', function () { state.boat.splice(i, 1); renderBoat(); });
-      row.append(rm);
-      mount.append(row);
-    });
-    chipifyAll(mount);
-    document.getElementById('addBoat').disabled = state.boat.length >= 8;
-    renderBoatOut();
-    renderDistX();
-  }
-
-  function validBoatPs() {
-    return state.boat.map(profileProb).filter(function (x) { return x.p !== null; }).map(function (x) { return x.p; });
-  }
-
-  function renderBoatOut() {
-    const out = document.getElementById('boatOut');
-    out.innerHTML = '';
-    const ps = validBoatPs();
-    if (!ps.length) {
-      out.append(h('p', { class: 'muted-line', text: 'No passenger with data in the group yet. Adjust the profiles.' }));
-      return;
-    }
-    const subs = ps.map(function (p) { return fmt(p); }).join('\\cdot');
-    const subsC = ps.map(function (p) { return fmt(1 - p); }).join('\\cdot');
-    const all = Prob.allOf(ps), none = Prob.noneOf(ps);
-    out.append(pLine('p_i=P(\\text{survived}\\mid\\text{profile}_i)=\\frac{n(\\text{survived}\\cap\\text{profile}_i)}{n(\\text{profile}_i)}'));
-    out.append(pLine('P(\\text{all survive})=\\prod_i p_i=' + subs + '=' + fmt(all) + pctTex(all)));
-    out.append(pLine('P(\\text{nobody survives})=\\prod_i (1-p_i)=' + subsC + '=' + fmt(none) + pctTex(none)));
-    out.append(pLine('P(\\text{at least one survives})=1-\\prod_i(1-p_i)=1-' + fmt(none) + '=' + fmt(1 - none) + pctTex(1 - none)));
-    out.append(pLine('P(\\text{exactly one survives})=\\sum_i p_i\\prod_{j\\neq i}(1-p_j)=' + fmt(Prob.exactlyOne(ps)) + pctTex(Prob.exactlyOne(ps))));
-    out.append(pLine('P(\\text{at most one survives})=P(\\text{none})+P(\\text{exactly one})=' + fmt(none) + '+' + fmt(Prob.exactlyOne(ps)) + '=' + fmt(Prob.atMostOne(ps)) + pctTex(Prob.atMostOne(ps))));
-    const excluded = state.boat.length - ps.length;
-    out.append(h('p', { class: 'muted-line', text: (excluded ? excluded + ' profile' + (excluded === 1 ? ' has' : 's have') + ' no data and ' + (excluded === 1 ? 'is' : 'are') + ' excluded. ' : '') + 'These values assume independence between the ' + ps.length + ' members (see the caveat in §4).' }));
-  }
-
-  function initStreaks() {
-    const controls = document.getElementById('streakControls');
-    const gsel = h('select');
-    DRAW_GROUPS.forEach(function (g, i) { gsel.append(h('option', { value: i, text: g.label })); });
-    gsel.value = state.streakGroup;
-    const nInput = h('input', { type: 'range', min: '1', max: '50', step: '1', value: String(state.streakN), 'aria-label': 'n, number of independent passengers' });
-    const nVal = h('span', { class: 'row-num', text: 'n = ' + state.streakN });
-    gsel.addEventListener('change', function () { state.streakGroup = +gsel.value; renderStreak(); });
-    nInput.addEventListener('input', function () { state.streakN = +nInput.value; nVal.textContent = 'n = ' + state.streakN; renderStreak(); });
-    controls.append(
-      h('label', { class: 'control' }, [h('span', { text: 'Group' }), gsel]),
-      h('label', { class: 'control' }, [h('span', { text: 'n' }), nInput]),
-      nVal
-    );
-    renderStreak();
-  }
-
-  function renderStreak() {
-    const g = DRAW_GROUPS[state.streakGroup];
-    const n = state.streakN;
-    const nA = Prob.count(rows, g.pred);
-    const out = document.getElementById('streakOut');
-    out.innerHTML = '';
-    if (nA === 0) {
-      out.append(h('p', { class: 'muted-line', text: 'No passengers match this group.' }));
-      return;
-    }
-    const nAS = Prob.count(rows, function (r) { return g.pred(r) && r.survived === 1; });
-    const p = Prob.p(nAS, nA);
-    out.append(pLine('p=P(\\text{survived}\\mid\\text{' + g.label + '})=' + fracTex(nAS, nA) + '=' + fmt(p)));
-    out.append(pLine('P(\\text{all } n \\text{ survive})=p^{' + n + '}=' + fmt(p) + '^{' + n + '}=' + fmt(Math.pow(p, n)) + pctTex(Math.pow(p, n))));
-    const vals = [];
-    for (let i = 1; i <= n; i++) vals.push(Math.pow(p, i));
-    lineChart(document.getElementById('streakChart'), vals);
-  }
-
-  /* ================= section 7: random variables ================= */
+  /* ================= section 3: random variables ================= */
 
   function initRV() {
-    renderDistX();
     initFam();
     renderClassZ();
-  }
-
-  function renderDistX() {
-    const mount = document.getElementById('distXOut');
-    mount.innerHTML = '';
-    const ps = validBoatPs();
-    if (!ps.length) {
-      mount.append(h('p', { class: 'muted-line', text: 'Define at least one profile with data in §6.1.' }));
-      document.getElementById('distXChart').innerHTML = '';
-      return;
-    }
-    const od = Prob.outcomeDistribution(ps);
-    const q = od.dist;
-    const n = ps.length;
-
-    // list every outcome while the list is short enough to read (2^3 = 8 rows)
-    if (n <= 3) {
-      const ot = h('table');
-      ot.append(h('caption', { text: 'Table 7.1. All ' + od.outcomes.length + ' outcomes for the group: S = survives, D = dies. Each outcome is an intersection of independent events, so its probability is a product.' }));
-      ot.append(h('thead', {}, [h('tr', {}, [
-        h('th', { text: 'Outcome' }), h('th', { class: 'num', text: 'x' }), h('th', { class: 'num', text: 'Probability' })
-      ])]));
-      const otb = h('tbody');
-      od.outcomes.forEach(function (o) {
-        const factors = o.pattern.map(function (s, i) { return fmt(s ? ps[i] : 1 - ps[i]); }).join(' · ');
-        otb.append(h('tr', {}, [
-          h('td', { text: o.pattern.map(function (s) { return s ? 'S' : 'D'; }).join(' ') }),
-          h('td', { class: 'num', text: String(o.k) }),
-          h('td', { class: 'num', text: factors + ' = ' + fmt(o.prob) })
-        ]));
-      });
-      ot.append(otb);
-      const ow = h('div', { class: 'table-scroll' });
-      ow.append(ot);
-      mount.append(ow);
-    } else {
-      mount.append(h('p', { class: 'muted-line', text: 'With ' + n + ' passengers there are 2^' + n + ' = ' + int(od.outcomes.length) + ' outcomes. They are summed in the same way; only the totals are shown. Reduce the group to 3 passengers to see every outcome.' }));
-    }
-
-    const tbl = h('table');
-    tbl.append(h('caption', { text: 'Table 7.2. Distribution of X = number of survivors among the ' + n + ' passengers of the lifeboat group. Outcomes with the same x are mutually exclusive, so their probabilities are added.' }));
-    tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'x' }), h('th', { class: 'num', text: 'P(X = x)' })])]));
-    const tb = h('tbody');
-    q.forEach(function (prob, k) {
-      tb.append(h('tr', {}, [h('td', { class: 'num', text: String(k) }), h('td', { class: 'num', text: fmt(prob) + ' (' + pct(prob) + ')' })]));
-    });
-    let sum = 0; q.forEach(function (v) { sum += v; });
-    tb.append(h('tr', { class: 'total' }, [h('td', { class: 'num', text: 'Σ' }), h('td', { class: 'num', text: fmt(sum) })]));
-    tbl.append(tb);
-    const wrap = h('div', { class: 'table-scroll' });
-    wrap.append(tbl);
-    mount.append(wrap);
-    vbarChart(document.getElementById('distXChart'), q.map(function (prob, k) {
-      return { label: String(k), value: prob, text: fmt(prob) };
-    }), { height: 220 });
   }
 
   function initFam() {
@@ -1190,7 +567,7 @@
     const maxY = Math.max.apply(null, Object.keys(st.counts).map(Number));
     const tbl = document.getElementById('famTable');
     tbl.innerHTML = '';
-    tbl.append(h('caption', { text: 'Table 7.3. Distribution of Y = family size aboard (' + (state.famFilter === 'all' ? 'all passengers' : ORD[+state.famFilter] + ' class') + '), P(Y = y) = n(Y = y) / n(S).' }));
+    tbl.append(h('caption', { text: 'Table 3.1. Distribution of Y = family size aboard (' + (state.famFilter === 'all' ? 'all passengers' : ORD[+state.famFilter] + ' class') + '), P(Y = y) = n(Y = y) / n(S).' }));
     tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'y' }), h('th', { class: 'num', text: 'n(Y = y)' }), h('th', { class: 'num', text: 'P(Y = y)' })])]));
     const tb = h('tbody');
     let sum = 0;
@@ -1218,7 +595,7 @@
   function renderClassZ() {
     const tbl = document.getElementById('classTable');
     tbl.innerHTML = '';
-    tbl.append(h('caption', { text: 'Table 7.4. Distribution of Z = ticket class of a randomly chosen passenger.' }));
+    tbl.append(h('caption', { text: 'Table 3.2. Distribution of Z = ticket class of a randomly chosen passenger.' }));
     tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'z' }), h('th', { class: 'num', text: 'n' }), h('th', { class: 'num', text: 'P(Z = z)' })])]));
     const tb = h('tbody');
     let sum = 0;
@@ -1236,7 +613,7 @@
     tbl.append(tb);
   }
 
-  /* ================= section 8: self-check ================= */
+  /* ================= section 4: self-check ================= */
 
   const QUIZ_EVENTS = [
     { label: 'female', pred: function (r) { return r.sex === 'F'; } },
@@ -1263,7 +640,7 @@
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
   function newQuestion() {
-    const type = pick(['pa', 'pcond', 'punion', 'indep', 'bayes', 'atleast']);
+    const type = pick(['pa', 'pcond', 'punion', 'indep']);
     let q;
     if (type === 'pa') {
       const A = pick(QUIZ_EVENTS);
@@ -1305,27 +682,6 @@
         type: type, html: 'Is &ldquo;the passenger is ' + A.label + '&rdquo; independent of &ldquo;the passenger is ' + B.label + '&rdquo;?',
         answer: yes, yesno: true,
         sol: 'P(A\\cap B)=\\frac{' + nAB + '}{' + N + '}=' + fmt(pAB) + ',\\quad P(A)\\,P(B)=' + fmt(pA) + '\\cdot' + fmt(pB) + '=' + fmt(pA * pB) + ',\\quad n(A\\cap B)\\,n(S)=' + nAB * N + (yes ? '=' : '\\neq ') + nA * nB + '=n(A)\\,n(B)' + (yes ? '\\ \\Rightarrow\\ \\text{yes}' : '\\ \\Rightarrow\\ \\text{no}')
-      };
-    } else if (type === 'bayes') {
-      const cls = pick([1, 2, 3]);
-      const surv = Math.random() < 0.5;
-      const nH = Prob.count(rows, function (r) { return r.pclass === cls; });
-      const nHE = Prob.count(rows, function (r) { return r.pclass === cls && r.survived === (surv ? 1 : 0); });
-      const nE = Prob.count(rows, function (r) { return r.survived === (surv ? 1 : 0); });
-      q = {
-        type: type, html: 'A passenger ' + (surv ? 'survived' : 'did not survive') + '. What is P(passenger travelled in ' + ORD[cls] + ' class | this)?',
-        answer: Prob.p(nHE, nE),
-        sol: 'P(H\\mid E)=\\frac{n(H\\cap E)}{n(E)}=' + fracTex(nHE, nE) + '=' + fmt(Prob.p(nHE, nE))
-      };
-    } else {
-      const A = pick(QUIZ_EVENTS.filter(function (e) { return Prob.count(rows, e.pred) > 0; }));
-      const nA = Prob.count(rows, A.pred);
-      const nn = 2 + Math.floor(Math.random() * 4);
-      const p = Prob.p(nA, N);
-      q = {
-        type: type, html: 'Choose ' + nn + ' passengers independently at random (with replacement). What is the probability that at least one of them is ' + A.label + '?',
-        answer: 1 - Math.pow(1 - p, nn),
-        sol: 'P(\\text{at least one})=1-(1-p)^{' + nn + '}=1-(1-' + fmt(p) + ')^{' + nn + '}=1-' + fmt(Math.pow(1 - p, nn)) + '=' + fmt(1 - Math.pow(1 - p, nn))
       };
     }
     quiz.q = q;
@@ -1384,7 +740,7 @@
     });
   }
 
-  /* ================= section 9: formula reference ================= */
+  /* ================= section 5: formula reference ================= */
 
   const FORMULAS = [
     {
@@ -1401,43 +757,21 @@
     },
     {
       group: 'Conditional probability', items: [
-        { tex: 'P(A\\mid B)=\\dfrac{P(A\\cap B)}{P(B)},\\ P(B)>0', note: 'Probability of A restricted to the world where B happened.', sec: 3 }
-      ]
-    },
-    {
-      group: 'Multiplication rule', items: [
-        { tex: 'P(A\\cap B)=P(B)\\,P(A\\mid B)', note: 'Chain two events; the base changes after the first.', sec: 3 },
-        { tex: 'P(A_1\\cap\\cdots\\cap A_k)=P(A_1)P(A_2\\mid A_1)\\cdots P(A_k\\mid A_1\\cdots A_{k-1})', note: 'k draws without replacement; each factor uses the shrunken list.', sec: 3 }
+        { tex: 'P(A\\mid B)=\\dfrac{P(A\\cap B)}{P(B)},\\ P(B)>0', note: 'Probability of A restricted to the passengers in B.', sec: 2 }
       ]
     },
     {
       group: 'Independence', items: [
-        { tex: 'P(A\\cap B)=P(A)\\,P(B)\\ \\Leftrightarrow\\ P(A\\mid B)=P(A)', note: 'Knowing B tells nothing about A. Checked exactly, in whole numbers: n(A ∩ B)·n(S) = n(A)·n(B).', sec: 4 },
-        { tex: 'A,B\\ \\text{indep.}\\ \\Rightarrow\\ A\\text{ and }B\',\\ A\'\\text{ and }B,\\ A\'\\text{ and }B\'\\ \\text{indep.}', note: 'Lecture fact: independence survives taking complements.', sec: 4 },
-        { tex: 'P(A\\cap B)=P(A)P(B),\\ P(A\\cap C)=P(A)P(C),\\ P(B\\cap C)=P(B)P(C),\\ P(A\\cap B\\cap C)=P(A)P(B)P(C)', note: 'Mutual independence of three events needs all four conditions.', sec: 4 }
-      ]
-    },
-    {
-      group: 'Several independent events', items: [
-        { tex: 'P(A_1\\cap\\cdots\\cap A_n)=\\prod_i P(A_i)', note: 'Everyone succeeds.', sec: 6 },
-        { tex: 'P(\\text{at least one})=1-\\prod_i\\bigl(1-P(A_i)\\bigr)', note: 'Complement of “nobody succeeds”.', sec: 6 },
-        { tex: 'P(\\text{exactly one})=\\sum_i P(A_i)\\prod_{j\\neq i}\\bigl(1-P(A_j)\\bigr)', note: 'Pick the one who succeeds, the rest fail.', sec: 6 },
-        { tex: 'P(\\text{all } n)=p^n', note: 'Equal probabilities: the lecture’s 44-game streak and 24-bulb Christmas lights.', sec: 6 }
-      ]
-    },
-    {
-      group: 'Total probability and Bayes', items: [
-        { tex: 'P(E)=\\sum_{i=1}^{m}P(H_i)\\,P(E\\mid H_i)', note: 'Rebuild P(E) from a partition H₁…Hₘ of the sample space.', sec: 5 },
-        { tex: 'P(H_i\\mid E)=\\dfrac{P(H_i)\\,P(E\\mid H_i)}{\\sum_j P(H_j)\\,P(E\\mid H_j)}', note: 'Reverse the conditioning: from P(E|H) to P(H|E).', sec: 5 }
+        { tex: 'P(A\\cap B)=P(A)\\,P(B)', note: 'Definition of independent events. Checked exactly, in whole numbers: n(A ∩ B)·n(S) = n(A)·n(B).', sec: 2 }
       ]
     },
     {
       group: 'Random variables', items: [
-        { tex: '\\sum_i P(X=x_i)=1', note: 'The probabilities in a distribution table add up to 1 (used to find k in the practice paper, Q5 and Q17).', sec: 7 },
-        { tex: 'P(X=k)=\\sum_{\\text{outcomes with }k\\text{ successes}}\\ \\prod_i P(\\text{outcome}_i)', note: 'List the outcomes, multiply along each one (independence), add the mutually exclusive outcomes with the same k.', sec: 7 }
+        { tex: '\\sum_i P(X=x_i)=1', note: 'The probabilities in a distribution table add up to 1 (used to find k in the practice paper, Q5 and Q17).', sec: 3 }
       ]
     }
   ];
+
 
   function initRef() {
     const mount = document.getElementById('formulaRef');
@@ -1466,11 +800,6 @@
     initHeader();
     initData();
     initEvents();
-    initConditional();
-    initIndependence();
-    initBayes();
-    initBoat();
-    initStreaks();
     initRV();
     initQuiz();
     initQuizSolution();
