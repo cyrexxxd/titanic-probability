@@ -73,7 +73,8 @@
   <!-- ==================== 2 ==================== -->
   <section id="sec2" aria-labelledby="h2">
     <h2 id="h2"><span class="sec-num">2</span>Events and the addition rule</h2>
-    <p>Build two events, <em>A</em> and <em>B</em>, by combining conditions. All counts and probabilities below are recomputed from the passenger list every time a selector changes.</p>
+    <p>Build two events, <em>A</em> and <em>B</em>, by pressing the buttons for the conditions you want. Every count, probability and percentage below is recomputed from the passenger list the moment a button is pressed.</p>
+    <h3>2.1&ensp;Event builder</h3>
     <div class="panel" id="eventBuilder">
       <div class="preset-row" role="group" aria-label="Preset events" id="presetRow"></div>
       <div class="event-grid" id="eventControls"></div>
@@ -89,6 +90,19 @@
           <figcaption class="figure-caption" id="vennCaption">Figure 2.1 — The four regions of the sample space, with passenger counts.</figcaption>
         </figure>
       </div>
+    </div>
+    <h3>2.2&ensp;Simulator: choosing passengers at random</h3>
+    <p>The probability P(A) = n(A)/n(S) describes a single random choice. The simulator makes that choice for real: each press draws passengers uniformly at random from the list (with replacement, so the draws are independent) and counts how often the drawn passenger falls in <em>A</em> and in <em>B</em> from 2.1. The relative frequency f(A) = k/n is then compared with the probability P(A). Change the events above and the same draws are re-counted.</p>
+    <div class="panel" id="simPanel">
+      <div class="sim-buttons" id="simButtons" role="group" aria-label="Draw passengers"></div>
+      <p class="muted-line" id="simMax"></p>
+      <div id="simStats" aria-live="polite"></div>
+      <div class="sim-last" id="simLast" aria-live="polite"></div>
+      <figure class="fig">
+        <div id="simChart"></div>
+        <figcaption class="figure-caption">Figure 2.2 — Running relative frequencies f(A) and f(B) after each draw; dashed lines mark the probabilities P(A) and P(B).</figcaption>
+      </figure>
+      <p class="muted-line" id="simNote"></p>
     </div>
   </section>
 

@@ -78,6 +78,68 @@
   }
   function TXT(attrs, str) { const t = S('text', attrs); t.textContent = str; return t; }
 
+  /* ================= button groups ================= */
+
+  // Every <select> inside a .control label is shown as a row of toggle buttons.
+  // The select stays in the DOM (hidden) as the single source of truth, so all
+  // existing change handlers keep working unchanged.
+  function chipify(sel, name) {
+    const group = h('div', { class: 'chips', role: 'radiogroup', 'aria-label': name || 'Options' });
+    const sync = function () {
+      Array.prototype.forEach.call(group.children, function (b) {
+        const on = b.dataset.v === sel.value;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+        b.tabIndex = on || (!sel.value && b === group.firstChild) ? 0 : -1;
+      });
+    };
+    Array.prototype.forEach.call(sel.options, function (o) {
+      if (o.value === '') return; // placeholder options ("Choose…") have no button
+      const b = h('button', { type: 'button', class: 'chip', role: 'radio', 'data-v': o.value, text: o.textContent });
+      b.addEventListener('click', function () {
+        if (sel.value !== o.value) {
+          sel.value = o.value;
+          sel.dispatchEvent(new Event('change'));
+        }
+        sync();
+      });
+      group.append(b);
+    });
+    group.addEventListener('keydown', function (e) {
+      const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (!step) return;
+      const bs = Array.prototype.slice.call(group.children);
+      let i = bs.findIndex(function (b) { return b.dataset.v === sel.value; });
+      i = (i + step + bs.length) % bs.length;
+      e.preventDefault();
+      bs[i].click();
+      if (bs[i].isConnected) bs[i].focus();
+    });
+    sel.hidden = true;
+    sel.classList.add('chip-source');
+    sel._chipSync = sync;
+    sync();
+    return group;
+  }
+
+  // Turn <label class="control"><span>Name</span><select/></label> into a
+  // <div class="control"> holding the name and a button group. A <label> cannot
+  // be kept: clicking its text would press the first button.
+  function chipifyAll(root) {
+    (root || document).querySelectorAll('label.control').forEach(function (lab) {
+      const sel = lab.querySelector('select:not(.chip-source)');
+      if (!sel) return;
+      const name = lab.querySelector('span') ? lab.querySelector('span').textContent : '';
+      const div = h('div', { class: 'control control-chips' });
+      while (lab.firstChild) div.appendChild(lab.firstChild);
+      lab.parentNode.replaceChild(div, lab);
+      div.appendChild(chipify(sel, name));
+    });
+  }
+
+  function pct(x) { return (x * 100).toFixed(2) + '%'; }
+  function pctTex(x) { return '\\;(' + (x * 100).toFixed(2) + '\\%)'; }
+
   function tex(el, str, display) {
     if (window.katex) {
       el.innerHTML = window.katex.renderToString(str, { throwOnError: false, displayMode: !!display });
@@ -169,7 +231,10 @@
 
   function syncEventSelects(container, ev) {
     const sels = container.querySelectorAll('select');
-    EV_FIELDS.forEach(function (f, i) { sels[i].value = ev[f.key]; });
+    EV_FIELDS.forEach(function (f, i) {
+      sels[i].value = ev[f.key];
+      if (sels[i]._chipSync) sels[i]._chipSync();
+    });
   }
 
   /* ================= SVG charts ================= */
@@ -516,27 +581,45 @@
       countCell('n(A)', nA), countCell('n(B)', nB),
       countCell('n(A ∩ B)', nAB), countCell('n(A ∪ B)', nU)
     ]));
-    out.append(pLine('P(A)=\\frac{n(A)}{n(S)}=' + fracTex(nA, N) + '=' + fmt(pA)));
+    const cAB = Prob.conditional(pAB, pB), cBA = Prob.conditional(pAB, pA);
+    out.append(h('div', { class: 'pct-grid', 'aria-live': 'polite' }, [
+      pctCell('P(A)', pA, nA + ' / ' + N),
+      pctCell('P(B)', pB, nB + ' / ' + N),
+      pctCell('P(A ∩ B)', pAB, nAB + ' / ' + N),
+      pctCell('P(A ∪ B)', pU, nU + ' / ' + N),
+      pctCell('P(A | B)', cAB, cAB === null ? 'P(B) = 0' : nAB + ' / ' + nB, true),
+      pctCell('P(B | A)', cBA, cBA === null ? 'P(A) = 0' : nAB + ' / ' + nA, true)
+    ]));
+    out.append(pLine('P(A)=\\frac{n(A)}{n(S)}=' + fracTex(nA, N) + '=' + fmt(pA) + pctTex(pA)));
     out.append(pLine("P(A')=1-P(A)=1-" + fmt(pA) + '=' + fmt(1 - pA)));
-    out.append(pLine('P(B)=\\frac{n(B)}{n(S)}=' + fracTex(nB, N) + '=' + fmt(pB)));
+    out.append(pLine('P(B)=\\frac{n(B)}{n(S)}=' + fracTex(nB, N) + '=' + fmt(pB) + pctTex(pB)));
     out.append(pLine("P(B')=1-P(B)=1-" + fmt(pB) + '=' + fmt(1 - pB)));
-    out.append(pLine('P(A\\cap B)=\\frac{n(A\\cap B)}{n(S)}=' + fracTex(nAB, N) + '=' + fmt(pAB)));
-    out.append(pLine('P(A\\cup B)=\\frac{n(A\\cup B)}{n(S)}=' + fracTex(nU, N) + '=' + fmt(pU)));
+    out.append(pLine('P(A\\cap B)=\\frac{n(A\\cap B)}{n(S)}=' + fracTex(nAB, N) + '=' + fmt(pAB) + pctTex(pAB)));
+    out.append(pLine('P(A\\cup B)=\\frac{n(A\\cup B)}{n(S)}=' + fracTex(nU, N) + '=' + fmt(pU) + pctTex(pU)));
     out.append(pLine('P(A\\cup B)=P(A)+P(B)-P(A\\cap B)=' + fmt(pA) + '+' + fmt(pB) + '-' + fmt(pAB) + '=' + fmt(pU)));
     if (pB === 0) {
       out.append(pLine('P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}\\ \\text{— undefined, because } P(B)=0'));
     } else {
-      out.append(pLine('P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}=\\frac{' + fracTex(nAB, N) + '}{' + fracTex(nB, N) + '}=' + fracTex(nAB, nB) + '=' + fmt(Prob.conditional(pAB, pB))));
+      out.append(pLine('P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}=\\frac{' + fracTex(nAB, N) + '}{' + fracTex(nB, N) + '}=' + fracTex(nAB, nB) + '=' + fmt(Prob.conditional(pAB, pB)) + pctTex(Prob.conditional(pAB, pB))));
     }
     if (pA === 0) {
       out.append(pLine('P(B\\mid A)=\\frac{P(A\\cap B)}{P(A)}\\ \\text{— undefined, because } P(A)=0'));
     } else {
-      out.append(pLine('P(B\\mid A)=\\frac{P(A\\cap B)}{P(A)}=\\frac{' + fracTex(nAB, N) + '}{' + fracTex(nA, N) + '}=' + fracTex(nAB, nA) + '=' + fmt(Prob.conditional(pAB, pA))));
+      out.append(pLine('P(B\\mid A)=\\frac{P(A\\cap B)}{P(A)}=\\frac{' + fracTex(nAB, N) + '}{' + fracTex(nA, N) + '}=' + fracTex(nAB, nA) + '=' + fmt(Prob.conditional(pAB, pA)) + pctTex(Prob.conditional(pAB, pA))));
     }
 
     renderVerdicts(nA, nB, nAB, pA, pB, pAB);
     renderVenn(nA, nB, nAB, nNeither);
     renderIndependence();
+    renderSim();
+  }
+
+  function pctCell(label, p, frac, strong) {
+    return h('div', { class: 'pct-cell' + (strong ? ' strong' : '') }, [
+      h('div', { class: 'pc-label', text: label }),
+      h('div', { class: 'pc-value', text: p === null ? '—' : pct(p) }),
+      h('div', { class: 'pc-frac', text: frac })
+    ]);
   }
 
   function countCell(label, value) {
@@ -599,6 +682,148 @@
     svg.append(TXT({ x: 170, y: 112, 'text-anchor': 'middle', 'class': 'val' }, int(nAB)));
     svg.append(TXT({ x: 234, y: 112, 'text-anchor': 'middle', 'class': 'val' }, int(bOnly)));
     svg.append(TXT({ x: W - 18, y: H - 14, 'text-anchor': 'end' }, 'neither: ' + int(nNeither)));
+    mount.innerHTML = '';
+    mount.appendChild(svg);
+  }
+
+  /* ================= section 2.2: random-draw simulator ================= */
+
+  // Draws are stored as row indices, so when A or B changes the same draws are
+  // simply re-counted against the new events.
+  const sim = { draws: [], ready: false };
+  const SIM_MAX = 20000;
+
+  function initSim() {
+    const bar = document.getElementById('simButtons');
+    [1, 10, 100, 1000].forEach(function (k) {
+      const b = h('button', { class: 'btn', type: 'button', text: 'Draw ' + int(k) });
+      b.addEventListener('click', function () { simDraw(k); });
+      bar.append(b);
+    });
+    const reset = h('button', { class: 'btn btn-quiet', type: 'button', text: 'Reset' });
+    reset.addEventListener('click', function () { sim.draws = []; renderSim(); });
+    bar.append(reset);
+    sim.ready = true;
+    renderSim();
+  }
+
+  function simDraw(k) {
+    const room = SIM_MAX - sim.draws.length;
+    for (let i = 0; i < Math.min(k, room); i++) sim.draws.push(Math.floor(Math.random() * N));
+    renderSim(true);
+  }
+
+  function passengerLine(r) {
+    const age = r.age === null ? 'age unknown' : (r.age < 1 ? Math.round(r.age * 12) + ' months' : Math.floor(r.age) + ' y');
+    const port = { S: 'Southampton', C: 'Cherbourg', Q: 'Queenstown' }[r.embarked] || 'port unknown';
+    return ORD[r.pclass] + ' class · ' + (r.sex === 'F' ? 'female' : 'male') + ' · ' + age + ' · ' + port;
+  }
+
+  function renderSim(justDrew) {
+    if (!sim.ready) return;
+    const predA = evPred(state.evA), predB = evPred(state.evB);
+    const pA = Prob.p(Prob.count(rows, predA), N);
+    const nBall = Prob.count(rows, predB);
+    const pB = Prob.p(nBall, N);
+    const nABall = Prob.count(rows, function (r) { return predA(r) && predB(r); });
+    const pAgB = nBall ? nABall / nBall : null;
+    const n = sim.draws.length;
+    let kA = 0, kB = 0, kAB = 0;
+    const seriesA = [], seriesB = [];
+    const every = Math.max(1, Math.ceil(n / 400));
+    sim.draws.forEach(function (idx, i) {
+      const r = rows[idx];
+      const a = predA(r), b = predB(r);
+      if (a) kA++;
+      if (b) kB++;
+      if (a && b) kAB++;
+      if ((i + 1) % every === 0 || i === n - 1) {
+        seriesA.push([i + 1, kA / (i + 1)]);
+        seriesB.push([i + 1, kB / (i + 1)]);
+      }
+    });
+
+    document.getElementById('simMax').textContent = n >= SIM_MAX ? 'Limit of ' + int(SIM_MAX) + ' draws reached — press Reset to start again.' : '';
+
+    // last passengers drawn
+    const last = document.getElementById('simLast');
+    last.innerHTML = '';
+    if (!n) {
+      last.append(h('p', { class: 'muted-line', text: 'No passengers drawn yet. Press a button to choose passengers at random.' }));
+    } else {
+      const shown = sim.draws.slice(-5).reverse();
+      shown.forEach(function (idx, j) {
+        const r = rows[idx];
+        const inA = predA(r), inB = predB(r);
+        last.append(h('div', { class: 'sim-card' + (j === 0 && justDrew ? ' fresh' : '') }, [
+          h('span', { class: 'sim-no', text: '#' + int(n - j) }),
+          h('span', { class: 'sim-desc', text: passengerLine(r) }),
+          h('span', { class: 'sim-fate ' + (r.survived ? 'yes' : 'no'), text: r.survived ? 'survived' : 'died' }),
+          h('span', { class: 'sim-tag' + (inA ? ' in' : ''), text: inA ? 'in A' : 'not A' }),
+          h('span', { class: 'sim-tag' + (inB ? ' in' : ''), text: inB ? 'in B' : 'not B' })
+        ]));
+      });
+    }
+
+    // frequency vs probability
+    const fA = n ? kA / n : null, fB = n ? kB / n : null, fAgB = kB ? kAB / kB : null;
+    const st = document.getElementById('simStats');
+    st.innerHTML = '';
+    st.append(h('div', { class: 'pct-grid' }, [
+      h('div', { class: 'pct-cell' }, [h('div', { class: 'pc-label', text: 'Draws n' }), h('div', { class: 'pc-value', text: int(n) }), h('div', { class: 'pc-frac', text: 'with replacement' })]),
+      simCell('f(A) = k / n', fA, kA + ' / ' + n, 'P(A) = ' + pct(pA)),
+      simCell('f(B) = k / n', fB, kB + ' / ' + n, 'P(B) = ' + pct(pB)),
+      simCell('f(A | B)', fAgB, kAB + ' / ' + kB, pAgB === null ? 'P(A | B) undefined' : 'P(A | B) = ' + pct(pAgB))
+    ]));
+
+    const note = document.getElementById('simNote');
+    if (!n) {
+      note.textContent = '';
+    } else {
+      note.textContent = 'After ' + int(n) + ' draw' + (n === 1 ? '' : 's') + ' the relative frequency of A is ' + pct(fA) +
+        ' against the probability ' + pct(pA) + ' (difference ' + (Math.abs(fA - pA) * 100).toFixed(2) + ' percentage points). ' +
+        (n < 100 ? 'With so few draws the frequency still jumps around; keep drawing.' : 'As n grows the frequency settles near the probability — the classical P(A) = n(A)/n(S) is what the frequency approaches in the long run.');
+    }
+    simChart(document.getElementById('simChart'), seriesA, seriesB, pA, pB);
+  }
+
+  function simCell(label, f, frac, target) {
+    return h('div', { class: 'pct-cell strong' }, [
+      h('div', { class: 'pc-label', text: label }),
+      h('div', { class: 'pc-value', text: f === null ? '—' : pct(f) }),
+      h('div', { class: 'pc-frac', text: frac }),
+      h('div', { class: 'pc-target', text: target })
+    ]);
+  }
+
+  function simChart(mount, sA, sB, pA, pB) {
+    const W = 640, H = 250, padL = 46, padR = 70, padT = 14, padB = 34;
+    const n = sA.length ? sA[sA.length - 1][0] : 1;
+    const px = function (x) { return padL + (n <= 1 ? 0 : (x - 1) / (n - 1)) * (W - padL - padR); };
+    const py = function (v) { return padT + (1 - v) * (H - padT - padB); };
+    const svg = S('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'chart', role: 'img', 'aria-label': 'Running relative frequencies of A and B' });
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
+      svg.append(S('line', { x1: padL, y1: py(v), x2: W - padR, y2: py(v), 'class': v === 0 ? 'axis' : 'guide' }));
+      svg.append(TXT({ x: padL - 6, y: py(v) + 4, 'text-anchor': 'end' }, (v * 100) + '%'));
+    });
+    // keep the two end labels at least 13px apart when P(A) and P(B) are close
+    let yA = py(pA) + 4, yB = py(pB) + 4;
+    if (Math.abs(yA - yB) < 13) {
+      const mid = (yA + yB) / 2, up = pA >= pB;
+      yA = mid + (up ? -6.5 : 6.5); yB = mid + (up ? 6.5 : -6.5);
+    }
+    [[pA, 'var(--accent)', 'P(A)', yA], [pB, 'var(--survived)', 'P(B)', yB]].forEach(function (t) {
+      svg.append(S('line', { x1: padL, y1: py(t[0]), x2: W - padR, y2: py(t[0]), stroke: t[1], 'stroke-width': '1', 'stroke-dasharray': '4 4' }));
+      svg.append(TXT({ x: W - padR + 6, y: t[3], fill: t[1] }, t[2] + ' ' + (t[0] * 100).toFixed(1) + '%'));
+    });
+    [[sA, 'var(--accent)'], [sB, 'var(--survived)']].forEach(function (s) {
+      if (!s[0].length) return;
+      const d = s[0].map(function (p, i) { return (i ? 'L' : 'M') + px(p[0]).toFixed(1) + ' ' + py(p[1]).toFixed(1); }).join(' ');
+      svg.append(S('path', { d: d, fill: 'none', stroke: s[1], 'stroke-width': '1.6' }));
+    });
+    svg.append(TXT({ x: padL, y: H - padB + 16, 'text-anchor': 'start' }, '1'));
+    svg.append(TXT({ x: W - padR, y: H - padB + 16, 'text-anchor': 'end' }, int(n)));
+    svg.append(TXT({ x: padL + (W - padL - padR) / 2, y: H - 4, 'text-anchor': 'middle' }, 'number of draws n'));
     mount.innerHTML = '';
     mount.appendChild(svg);
   }
@@ -680,7 +905,7 @@
     const p0 = Prob.p(nA, N);
     const withRep = Math.pow(p0, k);
     const factors = chain.factors.map(function (f) { return fracTex(f.num, f.den); }).join('\\cdot');
-    out.append(pLine('P(\\text{all } k \\text{ draws in } A)=\\frac{' + nA + '}{' + N + '}\\cdot\\frac{' + (nA - 1) + '}{' + (N - 1) + '}\\cdots\\frac{' + (nA - k + 1) + '}{' + (N - k + 1) + '}=' + factors + '=' + fmt(chain.value)));
+    out.append(pLine('P(\\text{all } k \\text{ draws in } A)=\\frac{' + nA + '}{' + N + '}\\cdot\\frac{' + (nA - 1) + '}{' + (N - 1) + '}\\cdots\\frac{' + (nA - k + 1) + '}{' + (N - k + 1) + '}=' + factors + '=' + fmt(chain.value) + pctTex(chain.value)));
     out.append(pLine('P(\\text{all } k \\text{ draws in } A)=\\Big(' + fracTex(nA, N) + '\\Big)^{' + k + '}=' + fmt(p0) + '^{' + k + '}=' + fmt(withRep) + '\\quad(\\text{with replacement, independent draws})'));
     const diffTxt = Math.abs(chain.value - withRep) < 5e-5
       ? 'For this group and k the two experiments practically coincide.'
@@ -876,7 +1101,7 @@
     }).join('+');
     out.append(pLine('P(E)=\\sum_i P(H_i)\\,P(E\\mid H_i)'));
     out.append(pLine('P(\\text{' + evLabel + '})=' + termStr));
-    out.append(pLine('P(\\text{' + evLabel + '})=' + sumStr + '=' + fmt(tp.total)));
+    out.append(pLine('P(\\text{' + evLabel + '})=' + sumStr + '=' + fmt(tp.total) + pctTex(tp.total)));
 
     // Bayes table
     const bt = document.getElementById('bayesTable');
@@ -898,7 +1123,7 @@
         h('td', { class: 'num' }, [g.nH + ' / ' + N + ' = ' + fmt(g.prior), h('span', { class: 'frac-note', text: 'prior' })]),
         h('td', { class: 'num' }, [g.nH === 0 ? '—' : g.nHE + ' / ' + g.nH + ' = ' + fmt(g.lik)]),
         h('td', { class: 'num', text: fmt(tp.terms[i]) }),
-        h('td', { class: 'num' }, [fmt(post[i]), h('span', { class: 'frac-note', text: 'posterior' })])
+        h('td', { class: 'num' }, [fmt(post[i]) + ' (' + pct(post[i]) + ')', h('span', { class: 'frac-note', text: 'posterior' })])
       ]));
     });
     tb.append(h('tr', { class: 'total' }, [
@@ -1022,7 +1247,7 @@
       if (info.p === null) {
         pEl.append(h('span', { class: 'nodata', text: 'no data — excluded' }));
       } else {
-        pEl.textContent = 'p' + (i + 1) + ' = ' + info.ns + ' / ' + info.n + ' = ' + fmt(info.p);
+        pEl.textContent = 'p' + (i + 1) + ' = ' + info.ns + ' / ' + info.n + ' = ' + fmt(info.p) + ' (' + pct(info.p) + ')';
       }
       row.append(pEl);
       const rm = h('button', { class: 'btn btn-small btn-quiet', type: 'button', text: 'Remove' });
@@ -1031,6 +1256,7 @@
       row.append(rm);
       mount.append(row);
     });
+    chipifyAll(mount);
     document.getElementById('addBoat').disabled = state.boat.length >= 8;
     renderBoatOut();
     renderDistX();
@@ -1052,11 +1278,11 @@
     const subsC = ps.map(function (p) { return fmt(1 - p); }).join('\\cdot');
     const all = Prob.allOf(ps), none = Prob.noneOf(ps);
     out.append(pLine('p_i=P(\\text{survived}\\mid\\text{profile}_i)=\\frac{n(\\text{survived}\\cap\\text{profile}_i)}{n(\\text{profile}_i)}'));
-    out.append(pLine('P(\\text{all survive})=\\prod_i p_i=' + subs + '=' + fmt(all)));
-    out.append(pLine('P(\\text{nobody survives})=\\prod_i (1-p_i)=' + subsC + '=' + fmt(none)));
-    out.append(pLine('P(\\text{at least one survives})=1-\\prod_i(1-p_i)=1-' + fmt(none) + '=' + fmt(1 - none)));
-    out.append(pLine('P(\\text{exactly one survives})=\\sum_i p_i\\prod_{j\\neq i}(1-p_j)=' + fmt(Prob.exactlyOne(ps))));
-    out.append(pLine('P(\\text{at most one survives})=P(\\text{none})+P(\\text{exactly one})=' + fmt(none) + '+' + fmt(Prob.exactlyOne(ps)) + '=' + fmt(Prob.atMostOne(ps))));
+    out.append(pLine('P(\\text{all survive})=\\prod_i p_i=' + subs + '=' + fmt(all) + pctTex(all)));
+    out.append(pLine('P(\\text{nobody survives})=\\prod_i (1-p_i)=' + subsC + '=' + fmt(none) + pctTex(none)));
+    out.append(pLine('P(\\text{at least one survives})=1-\\prod_i(1-p_i)=1-' + fmt(none) + '=' + fmt(1 - none) + pctTex(1 - none)));
+    out.append(pLine('P(\\text{exactly one survives})=\\sum_i p_i\\prod_{j\\neq i}(1-p_j)=' + fmt(Prob.exactlyOne(ps)) + pctTex(Prob.exactlyOne(ps))));
+    out.append(pLine('P(\\text{at most one survives})=P(\\text{none})+P(\\text{exactly one})=' + fmt(none) + '+' + fmt(Prob.exactlyOne(ps)) + '=' + fmt(Prob.atMostOne(ps)) + pctTex(Prob.atMostOne(ps))));
     const excluded = state.boat.length - ps.length;
     out.append(h('p', { class: 'muted-line', text: (excluded ? excluded + ' profile' + (excluded === 1 ? ' has' : 's have') + ' no data and ' + (excluded === 1 ? 'is' : 'are') + ' excluded. ' : '') + 'These values assume independence between the ' + ps.length + ' members (see the caveat in §4).' }));
   }
@@ -1069,7 +1295,7 @@
     const nInput = h('input', { type: 'range', min: '1', max: '50', step: '1', value: String(state.streakN), 'aria-label': 'n, number of independent passengers' });
     const nVal = h('span', { class: 'row-num', text: 'n = ' + state.streakN });
     gsel.addEventListener('change', function () { state.streakGroup = +gsel.value; renderStreak(); });
-    nInput.addEventListener('input', function () { state.streakN = +nInput.value; renderStreak(); });
+    nInput.addEventListener('input', function () { state.streakN = +nInput.value; nVal.textContent = 'n = ' + state.streakN; renderStreak(); });
     controls.append(
       h('label', { class: 'control' }, [h('span', { text: 'Group' }), gsel]),
       h('label', { class: 'control' }, [h('span', { text: 'n' }), nInput]),
@@ -1091,7 +1317,7 @@
     const nAS = Prob.count(rows, function (r) { return g.pred(r) && r.survived === 1; });
     const p = Prob.p(nAS, nA);
     out.append(pLine('p=P(\\text{survived}\\mid\\text{' + g.label + '})=' + fracTex(nAS, nA) + '=' + fmt(p)));
-    out.append(pLine('P(\\text{all } n \\text{ survive})=p^{' + n + '}=' + fmt(p) + '^{' + n + '}=' + fmt(Math.pow(p, n))));
+    out.append(pLine('P(\\text{all } n \\text{ survive})=p^{' + n + '}=' + fmt(p) + '^{' + n + '}=' + fmt(Math.pow(p, n)) + pctTex(Math.pow(p, n))));
     const vals = [];
     for (let i = 1; i <= n; i++) vals.push(Math.pow(p, i));
     lineChart(document.getElementById('streakChart'), vals);
@@ -1530,6 +1756,7 @@
         checkAnswer(sel.value === 'yes');
       });
       row.append(h('label', { class: 'control' }, [h('span', { text: 'Your answer' }), sel]), btn);
+      chipifyAll(row);
     } else {
       const input = h('input', { type: 'text', inputmode: 'decimal', 'aria-label': 'Your answer (decimal)' });
       const btn = h('button', { class: 'btn', type: 'button', text: 'Check' });
@@ -1655,6 +1882,7 @@
     initHeader();
     initData();
     initEvents();
+    initSim();
     initConditional();
     initIndependence();
     initBayes();
@@ -1665,6 +1893,7 @@
     initQuiz();
     initQuizSolution();
     initRef();
+    chipifyAll(document);
     initTOC();
   }
 

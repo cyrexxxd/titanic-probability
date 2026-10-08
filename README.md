@@ -7,7 +7,8 @@ data — there are no prepared answers.
 
 ## What it covers
 
-Classical probability, the addition and multiplication rules, conditional
+Classical probability (with a random-draw simulator comparing relative
+frequency with probability), the addition and multiplication rules, conditional
 probability, independence (including mutual independence of three events),
 drawing without replacement, total probability and Bayes' theorem, several
 independent events, random variables and their distributions, and a full

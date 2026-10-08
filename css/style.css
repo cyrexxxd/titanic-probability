@@ -220,8 +220,7 @@ input[type="range"] { accent-color: var(--accent); }
 }
 .count-cell { border-top: 2px solid var(--rule); padding-top: 6px; }
 .count-cell .cc-label {
-  font-family: var(--sans); font-size: 11px; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--muted);
+  font-family: var(--sans); font-size: 12px; letter-spacing: 0.02em; color: var(--muted);
 }
 .count-cell .cc-value { font-family: var(--mono); font-size: 21px; font-variant-numeric: tabular-nums; }
 
@@ -333,6 +332,67 @@ svg.chart .frame { fill: none; stroke: var(--rule); }
 /* long display formulas scroll inside their own box instead of widening the page */
 .katex-display { overflow-x: auto; overflow-y: hidden; max-width: 100%; padding: 2px 0; }
 .ref-math { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+
+/* ---------- toggle-button groups (replace the selects) ---------- */
+
+.chip-source { display: none !important; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-family: var(--sans); font-size: 13.5px; line-height: 1.2; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 6px 10px; cursor: pointer; min-height: 32px;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.chip:hover { border-color: var(--muted); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--paper); font-weight: 600; }
+.chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.control-chips { gap: 6px; }
+.event-def .control-chips { margin-bottom: 12px; }
+.boat-row .control-chips { min-width: 0; }
+
+/* ---------- percentage readouts ---------- */
+
+.pct-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px; margin: 14px 0 10px;
+}
+.pct-cell { border: 1px solid var(--rule); border-radius: 4px; padding: 10px 12px; background: var(--paper); }
+.pct-cell.strong { border-left: 3px solid var(--accent); }
+.pc-label { font-family: var(--sans); font-size: 12.5px; color: var(--muted); }
+.pc-value { font-family: var(--mono); font-size: 26px; line-height: 1.25; color: var(--accent); font-variant-numeric: tabular-nums; }
+.pc-frac, .pc-target { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+.pc-target { margin-top: 2px; color: var(--ink); }
+
+#simStats .pct-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 700px) {
+  .pct-grid, #simStats .pct-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pc-value { font-size: 22px; }
+  .sim-card:nth-child(n+4) { display: none; }
+}
+
+/* ---------- simulator ---------- */
+
+.sim-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.sim-buttons .btn { min-height: 38px; font-size: 14.5px; padding: 7px 16px; }
+.sim-last { display: grid; gap: 6px; margin: 12px 0; }
+.sim-card {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px;
+  font-family: var(--sans); font-size: 13.5px; padding: 7px 10px;
+  border: 1px solid var(--rule); border-radius: 4px; background: var(--paper);
+}
+.sim-card:not(:first-child) { opacity: 0.72; }
+.sim-card.fresh { animation: simFlash 0.6s ease; }
+@keyframes simFlash { from { background: var(--accent-soft); } to { background: var(--paper); } }
+.sim-no { font-family: var(--mono); color: var(--muted); min-width: 52px; }
+.sim-desc { flex: 1 1 220px; }
+.sim-fate { font-weight: 600; }
+.sim-fate.yes { color: var(--survived); }
+.sim-fate.no { color: var(--died); }
+.sim-tag { font-family: var(--mono); font-size: 12px; color: var(--muted); border: 1px solid var(--rule); border-radius: 3px; padding: 1px 6px; }
+.sim-tag.in { color: var(--accent); border-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .sim-card.fresh { animation: none; } .chip { transition: none; } }
+@media print { .chips, .sim-buttons { display: none !important; } }
+
 @media (max-width: 600px) {
   .katex-display { font-size: 0.8em; }
   .math-line { margin: 2px 0; }
