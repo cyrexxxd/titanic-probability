@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Probability on the Titanic</title>
-<meta name="description" content="An interactive lab in probability theory and statistics, built on the passenger list of RMS Titanic (1912). All probabilities are computed live in your browser from the titanic3 dataset.">
+<meta name="description" content="An interactive lab in probability theory, built on the passenger list of RMS Titanic (1912). All probabilities are computed live in your browser from the titanic3 dataset.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%231f3a5f' stroke-width='3'/%3E%3Cpath d='M16 3v26M3 16h26M6.8 6.8l18.4 18.4M25.2 6.8L6.8 25.2' stroke='%231f3a5f' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%231f3a5f'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,10 +17,10 @@
 
 <header class="site-header">
   <div class="wrap">
-    <p class="kicker">Interactive lab &middot; Probability theory and statistics</p>
+    <p class="kicker">Interactive lab &middot; Probability theory</p>
     <h1>Probability on the Titanic</h1>
-    <p class="subtitle">An interactive lab in probability theory and statistics, built on the passenger list of RMS&nbsp;Titanic (1912).</p>
-    <p class="abstract">Every number on this page is computed in your browser from the actual passenger list of the Titanic, with no prepared answers. The experiment behind each probability is always the same: choose one of the <span class="js-n">1,309</span> passengers uniformly at random, and ask how likely the chosen passenger is to have a given property. Classical probability, the addition and multiplication rules, independence, total probability and Bayes' theorem, random variables and a full correlation study are all applied to this single dataset, so formulas and data can be checked against each other at every step.</p>
+    <p class="subtitle">An interactive lab in probability theory, built on the passenger list of RMS&nbsp;Titanic (1912).</p>
+    <p class="abstract">Every number on this page is computed in your browser from the actual passenger list of the Titanic, with no prepared answers. The experiment behind each probability is always the same: choose one of the <span class="js-n">1,309</span> passengers uniformly at random, and ask how likely the chosen passenger is to have a given property. Classical probability, the addition and multiplication rules, independence, total probability and Bayes' theorem, and random variables are all applied to this single dataset, so formulas and data can be checked against each other at every step.</p>
     <dl class="key-figures" id="keyFigures">
       <div class="key-figure"><dt>Passengers on the list</dt><dd id="kfN"></dd></div>
       <div class="key-figure"><dt>Survived</dt><dd id="kfS"></dd></div>
@@ -43,9 +43,8 @@
         <li><a href="#sec5"><span class="toc-num">5</span>Total probability and Bayes</a></li>
         <li><a href="#sec6"><span class="toc-num">6</span>Several independent passengers</a></li>
         <li><a href="#sec7"><span class="toc-num">7</span>Random variables</a></li>
-        <li><a href="#sec8"><span class="toc-num">8</span>Statistical analysis</a></li>
-        <li><a href="#sec9"><span class="toc-num">9</span>Self-check</a></li>
-        <li><a href="#sec10"><span class="toc-num">10</span>Formula reference</a></li>
+        <li><a href="#sec8"><span class="toc-num">8</span>Self-check</a></li>
+        <li><a href="#sec9"><span class="toc-num">9</span>Formula reference</a></li>
       </ol>
     </details>
   </nav>
@@ -62,7 +61,7 @@
     <ul>
       <li>Age is missing for <span class="js-ageMissing">263</span> passengers (about one in five). Events built on age therefore use only passengers with a known age, and &ldquo;age unknown&rdquo; is treated as its own group.</li>
       <li>Fare is missing for 1 passenger; port of embarkation is missing for 2. Rows with a missing value are excluded from calculations that need that variable.</li>
-      <li>These are historical records, not a random sample of any larger population: every probability on this page is a relative frequency <em>of this list</em>, not an estimate for Edwardian ocean travel in general.</li>
+      <li>These are historical records, not a random sample of any larger population: every probability on this page is computed <em>for this list</em>, not an estimate for Edwardian ocean travel in general.</li>
     </ul>
     <h3>Who was on board</h3>
     <div class="table-scroll"><table id="contTable" aria-label="Contingency table of class, sex and survival"></table></div>
@@ -91,19 +90,6 @@
         </figure>
       </div>
     </div>
-    <h3>2.2&ensp;Simulator: choosing passengers at random</h3>
-    <p>The probability P(A) = n(A)/n(S) describes a single random choice. The simulator makes that choice for real: each press draws passengers uniformly at random from the list (with replacement, so the draws are independent) and counts how often the drawn passenger falls in <em>A</em> and in <em>B</em> from 2.1. The relative frequency f(A) = k/n is then compared with the probability P(A). Change the events above and the same draws are re-counted.</p>
-    <div class="panel" id="simPanel">
-      <div class="sim-buttons" id="simButtons" role="group" aria-label="Draw passengers"></div>
-      <p class="muted-line" id="simMax"></p>
-      <div id="simStats" aria-live="polite"></div>
-      <div class="sim-last" id="simLast" aria-live="polite"></div>
-      <figure class="fig">
-        <div id="simChart"></div>
-        <figcaption class="figure-caption">Figure 2.2. Running relative frequencies f(A) and f(B) after each draw; dashed lines mark the probabilities P(A) and P(B).</figcaption>
-      </figure>
-      <p class="muted-line" id="simNote"></p>
-    </div>
   </section>
 
   <!-- ==================== 3 ==================== -->
@@ -126,7 +112,7 @@
   <!-- ==================== 4 ==================== -->
   <section id="sec4" aria-labelledby="h4">
     <h2 id="h4"><span class="sec-num">4</span>Independence</h2>
-    <p>Two events are independent when knowing that one happened tells you nothing about the other: <span class="tex" data-tex="P(A\cap B)=P(A)\,P(B)"></span>. With real data this equality almost never holds <em>exactly</em>, so this lab calls a pair of events &ldquo;approximately independent&rdquo; when the two sides differ by at most 0.005.</p>
+    <p>Two events are independent when knowing that one happened tells you nothing about the other: <span class="tex" data-tex="P(A\cap B)=P(A)\,P(B)"></span>. This lab applies the definition exactly: the events are independent only if the two sides are equal. With counts from the list, P(A&cap;B) = P(A)&middot;P(B) is the same as <span class="tex" data-tex="n(A\cap B)\cdot n(S)=n(A)\cdot n(B)"></span>, so the check is done on whole numbers, with no rounding.</p>
     <h3>4.1&ensp;Independence of complements</h3>
     <p>Using the events <em>A</em> and <em>B</em> from §2, the table below checks the lecture fact: if <em>A</em> and <em>B</em> are independent, then so are <span class="tex" data-tex="A'"></span> and <span class="tex" data-tex="B'"></span>, <em>A</em> and <span class="tex" data-tex="B'"></span>, and <span class="tex" data-tex="A'"></span> and <em>B</em>.</p>
     <div class="table-scroll"><table id="compTable" aria-label="Independence of complements"></table></div>
@@ -209,47 +195,8 @@
 
   <!-- ==================== 8 ==================== -->
   <section id="sec8" aria-labelledby="h8">
-    <h2 id="h8"><span class="sec-num">8</span>Statistical analysis</h2>
-    <p>This section follows the course's statistics project template, applied to the same passenger list.</p>
-    <h3>8.1&ensp;Real-world problem</h3>
-    <p>Passengers paid very different fares for the same crossing, and age profiles differed between classes. Understanding whether two numeric variables move together, and how strongly, is the basic question of bivariate statistics.</p>
-    <h3>8.2&ensp;Research question</h3>
-    <p id="researchQuestion"></p>
-    <h3>8.3&ensp;Data</h3>
-    <p>The variables below are taken from the passenger list. Rows with a missing value in either variable are dropped; the number dropped is reported. A group filter restricts the analysis, e.g. to one class.</p>
-    <div class="panel">
-      <div class="controls-row" id="statControls"></div>
-      <p id="statDropped" class="muted-line"></p>
-      <div class="table-scroll"><table id="descTable" aria-label="Descriptive statistics"></table></div>
-    </div>
-    <p>For orientation, here is the standard comparison of the two most interesting variables, age and fare, between survivors and non-survivors:</p>
-    <div class="table-scroll"><table id="cmpTable" aria-label="Age and fare for survivors and non-survivors"></table></div>
-    <h3>8.4&ensp;Methods</h3>
-    <p>Descriptive statistics (sample mean, median, extremes, sample standard deviation <span class="tex" data-tex="s=\sqrt{\frac{\sum(x_i-\bar{x})^2}{n-1}}"></span>), histograms, the Pearson correlation coefficient <span class="tex" data-tex="r=\frac{S_{xy}}{\sqrt{S_{xx}S_{yy}}}"></span>, the least-squares line <span class="tex" data-tex="\hat{y}=a+bx"></span> with <span class="tex" data-tex="b=S_{xy}/S_{xx}"></span>, and the two-sided t-test of <span class="tex" data-tex="H_0:\rho=0"></span> against <span class="tex" data-tex="H_1:\rho\neq0"></span> with <span class="tex" data-tex="t=\frac{r\sqrt{n-2}}{\sqrt{1-r^2}}"></span> on <span class="tex" data-tex="n-2"></span> degrees of freedom. The p-value and critical values come from the Student t distribution, computed here by the regularized incomplete beta function. A <span class="tex" data-tex="(1-\alpha)"></span> confidence interval for the mean of Y closes the analysis.</p>
-    <h3>8.5&ensp;Results</h3>
-    <figure class="fig">
-      <div id="histX"></div>
-      <figcaption class="figure-caption" id="histXCap">Figure 8.1. Histogram of X.</figcaption>
-    </figure>
-    <figure class="fig">
-      <div id="histY"></div>
-      <figcaption class="figure-caption" id="histYCap">Figure 8.2. Histogram of Y.</figcaption>
-    </figure>
-    <figure class="fig">
-      <div id="scatter"></div>
-      <figcaption class="figure-caption">Figure 8.3. Scatter plot of Y against X with the fitted least-squares line.</figcaption>
-    </figure>
-    <div id="corrOut" class="math-out" aria-live="polite"></div>
-    <h3>8.6&ensp;Interpretation</h3>
-    <div id="interpOut"></div>
-    <h3>8.7&ensp;Conclusion</h3>
-    <div id="concOut"></div>
-  </section>
-
-  <!-- ==================== 9 ==================== -->
-  <section id="sec9" aria-labelledby="h9">
-    <h2 id="h9"><span class="sec-num">9</span>Self-check</h2>
-    <p>Practice with questions generated at random from the passenger list. Type a decimal answer (four decimals are compared with tolerance 0.001); independence questions are answered with yes/no.</p>
+    <h2 id="h8"><span class="sec-num">8</span>Self-check</h2>
+    <p>Practice with questions generated at random from the passenger list. Type the answer as a decimal with four places; independence questions are answered with yes/no.</p>
     <div class="panel" id="quizPanel">
       <div class="controls-row">
         <button type="button" id="quizNew" class="btn">New question</button>
@@ -263,9 +210,9 @@
     </div>
   </section>
 
-  <!-- ==================== 10 ==================== -->
-  <section id="sec10" aria-labelledby="h10">
-    <h2 id="h10"><span class="sec-num">10</span>Formula reference</h2>
+  <!-- ==================== 9 ==================== -->
+  <section id="sec9" aria-labelledby="h9">
+    <h2 id="h9"><span class="sec-num">9</span>Formula reference</h2>
     <p>Every formula used on this page, grouped as in the course syllabus. Each entry names the section where it is applied.</p>
     <div id="formulaRef"></div>
   </section>
