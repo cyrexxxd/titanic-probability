@@ -168,7 +168,7 @@
   <section id="sec7" aria-labelledby="h7">
     <h2 id="h7"><span class="sec-num">7</span>Random variables</h2>
     <h3>7.1&ensp;X: number of survivors in the lifeboat group</h3>
-    <p>The distribution of <span class="tex" data-tex="X"></span> is built by the multiplication rule applied recursively: start with <span class="tex" data-tex="q[0]=1"></span>; after adding a passenger who survives with probability <span class="tex" data-tex="p_i"></span>, update <span class="tex" data-tex="q_{\text{new}}[k]=q[k](1-p_i)+q[k-1]p_i"></span>. This is the product rule for &ldquo;exactly <em>k</em> successes&rdquo;, one passenger at a time.</p>
+    <p>Take the group from §6.1. Each passenger either survives (S) or dies (D), so a group of <em>n</em> people has 2<sup><em>n</em></sup> possible outcomes. Because the members are assumed independent, the probability of one outcome is the product of the individual probabilities, for example <span class="tex" data-tex="P(S\cap D\cap S)=p_1(1-p_2)p_3"></span>. Different outcomes are mutually exclusive, so <span class="tex" data-tex="P(X=k)"></span> is the sum over all outcomes with exactly <em>k</em> survivors. This is the method of the lecture example with three insurance clients and of the biased-coin question in the practice paper.</p>
     <div class="panel">
       <div id="distXOut"></div>
       <figure class="fig">
@@ -181,12 +181,10 @@
     <div class="panel">
       <div class="controls-row" id="famControls"></div>
       <div class="table-scroll"><table id="famTable" aria-label="Distribution of family size"></table></div>
-      <div id="famOut"></div>
       <figure class="fig">
         <div id="famChart"></div>
-        <figcaption class="figure-caption">Figure 7.2. P(Y = y) for the selected filter; E(Y) by class is compared below the table.</figcaption>
+        <figcaption class="figure-caption">Figure 7.2. Number of passengers for each family size y, for the selected filter.</figcaption>
       </figure>
-      <div class="table-scroll"><table id="famClassTable" aria-label="Mean family size by class"></table></div>
     </div>
     <h3>7.3&ensp;Z: ticket class</h3>
     <p>The simplest non-trivial example: <span class="tex" data-tex="Z\in\{1,2,3\}"></span> with probabilities equal to the class shares of the list.</p>

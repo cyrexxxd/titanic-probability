@@ -1118,25 +1118,47 @@
       document.getElementById('distXChart').innerHTML = '';
       return;
     }
-    const q = Prob.successDistribution(ps);
-    const m = q.length - 1;
+    const od = Prob.outcomeDistribution(ps);
+    const q = od.dist;
+    const n = ps.length;
+
+    // list every outcome while the list is short enough to read (2^3 = 8 rows)
+    if (n <= 3) {
+      const ot = h('table');
+      ot.append(h('caption', { text: 'Table 7.1. All ' + od.outcomes.length + ' outcomes for the group: S = survives, D = dies. Each outcome is an intersection of independent events, so its probability is a product.' }));
+      ot.append(h('thead', {}, [h('tr', {}, [
+        h('th', { text: 'Outcome' }), h('th', { class: 'num', text: 'x' }), h('th', { class: 'num', text: 'Probability' })
+      ])]));
+      const otb = h('tbody');
+      od.outcomes.forEach(function (o) {
+        const factors = o.pattern.map(function (s, i) { return fmt(s ? ps[i] : 1 - ps[i]); }).join(' · ');
+        otb.append(h('tr', {}, [
+          h('td', { text: o.pattern.map(function (s) { return s ? 'S' : 'D'; }).join(' ') }),
+          h('td', { class: 'num', text: String(o.k) }),
+          h('td', { class: 'num', text: factors + ' = ' + fmt(o.prob) })
+        ]));
+      });
+      ot.append(otb);
+      const ow = h('div', { class: 'table-scroll' });
+      ow.append(ot);
+      mount.append(ow);
+    } else {
+      mount.append(h('p', { class: 'muted-line', text: 'With ' + n + ' passengers there are 2^' + n + ' = ' + int(od.outcomes.length) + ' outcomes. They are summed in the same way; only the totals are shown. Reduce the group to 3 passengers to see every outcome.' }));
+    }
+
     const tbl = h('table');
-    tbl.append(h('caption', { text: 'Table 7.1. Distribution of X = number of survivors among the ' + ps.length + ' passengers of the lifeboat group.' }));
+    tbl.append(h('caption', { text: 'Table 7.2. Distribution of X = number of survivors among the ' + n + ' passengers of the lifeboat group. Outcomes with the same x are mutually exclusive, so their probabilities are added.' }));
     tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'x' }), h('th', { class: 'num', text: 'P(X = x)' })])]));
     const tb = h('tbody');
     q.forEach(function (prob, k) {
-      tb.append(h('tr', {}, [h('td', { class: 'num', text: String(k) }), h('td', { class: 'num', text: fmt(prob) })]));
+      tb.append(h('tr', {}, [h('td', { class: 'num', text: String(k) }), h('td', { class: 'num', text: fmt(prob) + ' (' + pct(prob) + ')' })]));
     });
     let sum = 0; q.forEach(function (v) { sum += v; });
-    const ex = Prob.mean(q.map(function (_, k) { return k; }), q);
     tb.append(h('tr', { class: 'total' }, [h('td', { class: 'num', text: 'Σ' }), h('td', { class: 'num', text: fmt(sum) })]));
     tbl.append(tb);
     const wrap = h('div', { class: 'table-scroll' });
     wrap.append(tbl);
     mount.append(wrap);
-    const pEl = h('p');
-    tex(pEl, 'E(X)=\\sum_x x\\,P(X=x)=' + fmt(ex), true);
-    mount.append(pEl);
     vbarChart(document.getElementById('distXChart'), q.map(function (prob, k) {
       return { label: String(k), value: prob, text: fmt(prob) };
     }), { height: 220 });
@@ -1156,22 +1178,19 @@
     renderFam();
   }
 
-  function famStats(subset) {
+  function famCounts(subset) {
     const counts = {};
     subset.forEach(function (r) { counts[r.familySize] = (counts[r.familySize] || 0) + 1; });
-    const n = subset.length;
-    let ey = 0;
-    Object.keys(counts).forEach(function (k) { ey += (+k) * counts[k] / n; });
-    return { counts: counts, n: n, ey: ey };
+    return { counts: counts, n: subset.length };
   }
 
   function renderFam() {
     const subset = state.famFilter === 'all' ? rows : rows.filter(function (r) { return String(r.pclass) === state.famFilter; });
-    const st = famStats(subset);
+    const st = famCounts(subset);
     const maxY = Math.max.apply(null, Object.keys(st.counts).map(Number));
     const tbl = document.getElementById('famTable');
     tbl.innerHTML = '';
-    tbl.append(h('caption', { text: 'Table 7.2. Empirical distribution of Y = family size aboard (' + (state.famFilter === 'all' ? 'all passengers' : state.famFilter + ' class') + ').' }));
+    tbl.append(h('caption', { text: 'Table 7.3. Distribution of Y = family size aboard (' + (state.famFilter === 'all' ? 'all passengers' : ORD[+state.famFilter] + ' class') + '), P(Y = y) = n(Y = y) / n(S).' }));
     tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'y' }), h('th', { class: 'num', text: 'n(Y = y)' }), h('th', { class: 'num', text: 'P(Y = y)' })])]));
     const tb = h('tbody');
     let sum = 0;
@@ -1187,11 +1206,6 @@
     }
     tb.append(h('tr', { class: 'total' }, [h('td', { text: 'Σ' }), h('td', { class: 'num', text: int(st.n) }), h('td', { class: 'num', text: fmt(sum) })]));
     tbl.append(tb);
-    const out = document.getElementById('famOut');
-    out.innerHTML = '';
-    const pEl = h('p');
-    tex(pEl, 'E(Y)=\\sum_y y\\,P(Y=y)=' + fmt(st.ey), true);
-    out.append(pEl);
     vbarChart(document.getElementById('famChart'), (function () {
       const items = [];
       for (let y = 1; y <= maxY; y++) {
@@ -1199,23 +1213,6 @@
       }
       return items;
     })(), { height: 220 });
-    // E(Y) by class
-    const ct = document.getElementById('famClassTable');
-    ct.innerHTML = '';
-    ct.append(h('caption', { text: 'Table 7.3. Expected family size by class (computed on all passengers, ignoring the filter above).' }));
-    ct.append(h('thead', {}, [h('tr', {}, [h('th', { text: 'Class' }), h('th', { class: 'num', text: 'n' }), h('th', { class: 'num', text: 'E(Y)' })])]));
-    const tb2 = h('tbody');
-    const allSt = famStats(rows);
-    tb2.append(h('tr', {}, [h('td', { text: 'All' }), h('td', { class: 'num', text: int(allSt.n) }), h('td', { class: 'num', text: fmt(allSt.ey) })]));
-    [1, 2, 3].forEach(function (cls) {
-      const s = famStats(rows.filter(function (r) { return r.pclass === cls; }));
-      tb2.append(h('tr', {}, [
-        h('td', { text: ORD[cls] + ' class' }),
-        h('td', { class: 'num', text: int(s.n) }),
-        h('td', { class: 'num', text: fmt(s.ey) })
-      ]));
-    });
-    ct.append(tb2);
   }
 
   function renderClassZ() {
@@ -1224,18 +1221,18 @@
     tbl.append(h('caption', { text: 'Table 7.4. Distribution of Z = ticket class of a randomly chosen passenger.' }));
     tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'z' }), h('th', { class: 'num', text: 'n' }), h('th', { class: 'num', text: 'P(Z = z)' })])]));
     const tb = h('tbody');
-    let ez = 0;
+    let sum = 0;
     [1, 2, 3].forEach(function (cls) {
       const c = Prob.count(rows, function (r) { return r.pclass === cls; });
       const pr = Prob.p(c, N);
-      ez += cls * pr;
+      sum += pr;
       tb.append(h('tr', {}, [
         h('td', { class: 'num', text: String(cls) }),
         h('td', { class: 'num', text: int(c) }),
         h('td', { class: 'num', text: c + ' / ' + N + ' = ' + fmt(pr) })
       ]));
     });
-    tb.append(h('tr', { class: 'total' }, [h('td', { class: 'num', text: 'E(Z)' }), h('td', { text: '' }), h('td', { class: 'num', text: fmt(ez) })]));
+    tb.append(h('tr', { class: 'total' }, [h('td', { class: 'num', text: 'Σ' }), h('td', { class: 'num', text: int(N) }), h('td', { class: 'num', text: fmt(sum) })]));
     tbl.append(tb);
   }
 
@@ -1436,8 +1433,8 @@
     },
     {
       group: 'Random variables', items: [
-        { tex: '\\sum_i P(X=x_i)=1,\\qquad E(X)=\\sum_i x_i\\,P(X=x_i)', note: 'Distribution table and expectation.', sec: 7 },
-        { tex: 'q_{\\text{new}}[k]=q[k](1-p_i)+q[k-1]p_i', note: 'Number of successes built by the product rule, one trial at a time.', sec: 7 }
+        { tex: '\\sum_i P(X=x_i)=1', note: 'The probabilities in a distribution table add up to 1 (used to find k in the practice paper, Q5 and Q17).', sec: 7 },
+        { tex: 'P(X=k)=\\sum_{\\text{outcomes with }k\\text{ successes}}\\ \\prod_i P(\\text{outcome}_i)', note: 'List the outcomes, multiply along each one (independence), add the mutually exclusive outcomes with the same k.', sec: 7 }
       ]
     }
   ];

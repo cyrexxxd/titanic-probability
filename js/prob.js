@@ -86,28 +86,28 @@
     return noneOf(ps) + exactlyOne(ps);
   }
 
-  /* ---------- 3.8 distribution of the number of successes (product rule, recursively) ----------
-     After each trial i: q_new[k] = q[k]·(1−p_i) + q[k−1]·p_i. */
+  /* ---------- 3.8 distribution of the number of successes ----------
+     Every outcome (who succeeds, who does not) is an intersection of independent
+     events, so its probability is a product; outcomes with the same number of
+     successes are mutually exclusive, so their probabilities are added. */
 
-  function successDistribution(ps) {
-    let q = [1];
-    for (let i = 0; i < ps.length; i++) {
-      const pi = ps[i];
-      const qn = new Array(q.length + 1).fill(0);
-      for (let k = 0; k < qn.length; k++) {
-        const stay = k < q.length ? q[k] * (1 - pi) : 0;
-        const gain = k > 0 ? q[k - 1] * pi : 0;
-        qn[k] = stay + gain;
+  function outcomeDistribution(ps) {
+    const n = ps.length;
+    const outcomes = [];
+    const dist = new Array(n + 1).fill(0);
+    for (let mask = 0; mask < (1 << n); mask++) {
+      const pattern = [];
+      let prob = 1, k = 0;
+      for (let i = 0; i < n; i++) {
+        const s = ((mask >> (n - 1 - i)) & 1) === 1;
+        pattern.push(s);
+        prob *= s ? ps[i] : 1 - ps[i];
+        if (s) k++;
       }
-      q = qn;
+      outcomes.push({ pattern: pattern, k: k, prob: prob });
+      dist[k] += prob;
     }
-    return q;
-  }
-
-  function mean(values, probs) {
-    let s = 0;
-    for (let i = 0; i < values.length; i++) s += values[i] * probs[i];
-    return s;
+    return { outcomes: outcomes, dist: dist };
   }
 
   /* ---------- 3.7 total probability and Bayes ---------- */
@@ -146,8 +146,7 @@
     atLeastOne: atLeastOne,
     exactlyOne: exactlyOne,
     atMostOne: atMostOne,
-    successDistribution: successDistribution,
-    mean: mean,
+    outcomeDistribution: outcomeDistribution,
     totalProbability: totalProbability,
     bayes: bayes,
     fmt: fmt
