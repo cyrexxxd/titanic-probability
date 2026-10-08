@@ -144,6 +144,7 @@ h3 {
   font-family: var(--sans); font-size: 16px; font-weight: 600;
   margin: 26px 0 8px; color: var(--ink);
 }
+.source-line { font-family: var(--sans); font-size: 14px; color: var(--muted); }
 .section-lede { font-style: italic; color: var(--muted); }
 
 /* ---------- tables (booktabs) ---------- */
