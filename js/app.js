@@ -796,16 +796,11 @@
   /* ================= boot ================= */
 
   function init() {
-    renderInlineTex(document);
-    initHeader();
-    initData();
-    initEvents();
-    initRV();
-    initQuiz();
-    initQuizSolution();
-    initRef();
-    chipifyAll(document);
-    initTOC();
+    // Each step runs on its own: if one widget fails, the rest of the page still works.
+    [renderInlineTex, initHeader, initData, initEvents, initRV, initQuiz, initQuizSolution, initRef,
+      function () { chipifyAll(document); }, initTOC].forEach(function (step) {
+      try { step(); } catch (e) { if (window.console) console.error('init step failed:', e); }
+    });
   }
 
   if (document.readyState === 'loading') {
