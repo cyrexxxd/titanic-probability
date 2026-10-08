@@ -1,4 +1,4 @@
-/* app.js — UI for "Probability on the Titanic". Depends on window.TITANIC, window.Prob, window.katex. */
+/* app.js: UI for "Probability on the Titanic". Depends on window.TITANIC, window.Prob, window.katex. */
 (function () {
   'use strict';
 
@@ -407,7 +407,7 @@
   function initData() {
     const vt = document.getElementById('varTable');
     vt.innerHTML = '';
-    vt.append(h('caption', { text: 'Table 1.1 — Variables in the dataset; missing counts are computed live from the list.' }));
+    vt.append(h('caption', { text: 'Table 1.1. Variables in the dataset; missing counts are computed live from the list.' }));
     vt.append(h('thead', {}, [h('tr', {}, [
       h('th', { text: 'Variable' }), h('th', { text: 'Meaning' }),
       h('th', { text: 'Values' }), h('th', { class: 'num', text: 'Missing' })
@@ -427,7 +427,7 @@
     // contingency table: class x sex x survived
     const ct = document.getElementById('contTable');
     ct.innerHTML = '';
-    ct.append(h('caption', { text: 'Table 1.2 — Passengers by class, sex and survival. The last column is P(survived | row), computed within the row.' }));
+    ct.append(h('caption', { text: 'Table 1.2. Passengers by class, sex and survival. The last column is P(survived | row), computed within the row.' }));
     ct.append(h('thead', {}, [h('tr', {}, [
       h('th', { text: 'Group' }), h('th', { class: 'num', text: 'n' }),
       h('th', { class: 'num', text: 'Survived' }), h('th', { class: 'num', text: 'Died' }),
@@ -444,7 +444,7 @@
         const ng = g.length;
         tb2.append(countRow(cls + ' class · ' + sm[1], ng, ns, false));
       });
-      tb2.append(countRow(cls + ' class — all', sub.n, sub.s, true));
+      tb2.append(countRow(cls + ' class, all', sub.n, sub.s, true));
       grand.n += sub.n; grand.s += sub.s;
     });
     tb2.append(countRow('All passengers', grand.n, grand.s, true, true));
@@ -452,7 +452,7 @@
     document.getElementById('contCaption').textContent =
       'Third class alone accounts for ' + int(Prob.count(rows, function (r) { return r.pclass === 3; })) +
       ' of ' + int(N) + ' passengers (' + fmt(Prob.p(Prob.count(rows, function (r) { return r.pclass === 3; }), N)) +
-      '), yet its survival rate is the lowest of the three classes — the asymmetry that drives most of this lab.';
+      '), yet its survival rate is the lowest of the three classes. This asymmetry drives most of this lab.';
 
     function countRow(label, n, ns, isSub, isTotal) {
       const p = Prob.p(ns, n);
@@ -598,12 +598,12 @@
     out.append(pLine('P(A\\cup B)=\\frac{n(A\\cup B)}{n(S)}=' + fracTex(nU, N) + '=' + fmt(pU) + pctTex(pU)));
     out.append(pLine('P(A\\cup B)=P(A)+P(B)-P(A\\cap B)=' + fmt(pA) + '+' + fmt(pB) + '-' + fmt(pAB) + '=' + fmt(pU)));
     if (pB === 0) {
-      out.append(pLine('P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}\\ \\text{— undefined, because } P(B)=0'));
+      out.append(pLine('P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}\\ \\text{is undefined, because } P(B)=0'));
     } else {
       out.append(pLine('P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}=\\frac{' + fracTex(nAB, N) + '}{' + fracTex(nB, N) + '}=' + fracTex(nAB, nB) + '=' + fmt(Prob.conditional(pAB, pB)) + pctTex(Prob.conditional(pAB, pB))));
     }
     if (pA === 0) {
-      out.append(pLine('P(B\\mid A)=\\frac{P(A\\cap B)}{P(A)}\\ \\text{— undefined, because } P(A)=0'));
+      out.append(pLine('P(B\\mid A)=\\frac{P(A\\cap B)}{P(A)}\\ \\text{is undefined, because } P(A)=0'));
     } else {
       out.append(pLine('P(B\\mid A)=\\frac{P(A\\cap B)}{P(A)}=\\frac{' + fracTex(nAB, N) + '}{' + fracTex(nA, N) + '}=' + fracTex(nAB, nA) + '=' + fmt(Prob.conditional(pAB, pA)) + pctTex(Prob.conditional(pAB, pA))));
     }
@@ -617,7 +617,7 @@
   function pctCell(label, p, frac, strong) {
     return h('div', { class: 'pct-cell' + (strong ? ' strong' : '') }, [
       h('div', { class: 'pc-label', text: label }),
-      h('div', { class: 'pc-value', text: p === null ? '—' : pct(p) }),
+      h('div', { class: 'pc-value', text: p === null ? 'n/a' : pct(p) }),
       h('div', { class: 'pc-frac', text: frac })
     ]);
   }
@@ -660,7 +660,7 @@
       '. The difference is |' + fmt(pAB) + ' − ' + fmt(prod) + '| = ' + fmt(Math.abs(diff)) +
       (indep ? ' ≤ 0.005, within the tolerance used in this lab: with real data exact equality almost never happens, so independence is judged approximately.' : ' > 0.005, beyond the tolerance 0.005.');
     if (condAB !== null) {
-      txt += ' The same conclusion from the conditional form: P(A|B) = ' + fmt(condAB) + ' vs P(A) = ' + fmt(pA) + ' — ' +
+      txt += ' The same conclusion from the conditional form: P(A|B) = ' + fmt(condAB) + ' vs P(A) = ' + fmt(pA) + ': ' +
         (indep ? 'knowing B barely changes the probability of A.' : 'knowing B changes the probability of A by ' + fmt(Math.abs(condAB - pA)) + '.');
     }
     parts.push(h('p', { text: txt }));
@@ -743,7 +743,7 @@
       }
     });
 
-    document.getElementById('simMax').textContent = n >= SIM_MAX ? 'Limit of ' + int(SIM_MAX) + ' draws reached — press Reset to start again.' : '';
+    document.getElementById('simMax').textContent = n >= SIM_MAX ? 'Limit of ' + int(SIM_MAX) + ' draws reached. Press Reset to start again.' : '';
 
     // last passengers drawn
     const last = document.getElementById('simLast');
@@ -782,7 +782,7 @@
     } else {
       note.textContent = 'After ' + int(n) + ' draw' + (n === 1 ? '' : 's') + ' the relative frequency of A is ' + pct(fA) +
         ' against the probability ' + pct(pA) + ' (difference ' + (Math.abs(fA - pA) * 100).toFixed(2) + ' percentage points). ' +
-        (n < 100 ? 'With so few draws the frequency still jumps around; keep drawing.' : 'As n grows the frequency settles near the probability — the classical P(A) = n(A)/n(S) is what the frequency approaches in the long run.');
+        (n < 100 ? 'With so few draws the frequency still jumps around; keep drawing.' : 'As n grows the frequency settles near the probability: the classical P(A) = n(A)/n(S) is what the frequency approaches in the long run.');
     }
     simChart(document.getElementById('simChart'), seriesA, seriesB, pA, pB);
   }
@@ -790,7 +790,7 @@
   function simCell(label, f, frac, target) {
     return h('div', { class: 'pct-cell strong' }, [
       h('div', { class: 'pc-label', text: label }),
-      h('div', { class: 'pc-value', text: f === null ? '—' : pct(f) }),
+      h('div', { class: 'pc-value', text: f === null ? 'n/a' : pct(f) }),
       h('div', { class: 'pc-frac', text: frac }),
       h('div', { class: 'pc-target', text: target })
     ]);
@@ -910,9 +910,9 @@
     const diffTxt = Math.abs(chain.value - withRep) < 5e-5
       ? 'For this group and k the two experiments practically coincide.'
       : 'The two values differ by ' + fmt(Math.abs(chain.value - withRep)) + ' here.';
-    let note = 'Without replacement the draws are dependent: every passenger removed from the list shrinks both the numerator and the denominator of the next factor — this is the chain form of the multiplication rule. ' +
+    let note = 'Without replacement the draws are dependent: every passenger removed from the list shrinks both the numerator and the denominator of the next factor. This is the chain form of the multiplication rule. ' +
       diffTxt + ' As the list grows relative to k, the shrinking matters less and the two models converge.';
-    if (k > nA) note = 'k exceeds n(A): the group runs out of passengers, so the event is impossible and the chain product is 0 — the clearest sign that the draws are dependent.';
+    if (k > nA) note = 'k exceeds n(A): the group runs out of passengers, so the event is impossible and the chain product is 0, the clearest sign that the draws are dependent.';
     out.append(h('p', { class: 'muted-line', text: note }));
   }
 
@@ -933,7 +933,7 @@
     // 4.1 complements table
     const ct = document.getElementById('compTable');
     ct.innerHTML = '';
-    ct.append(h('caption', { text: 'Table 4.1 — Combinations of A, B and their complements. Each row tests P(X ∩ Y) against P(X)·P(Y) with tolerance 0.005.' }));
+    ct.append(h('caption', { text: 'Table 4.1. Combinations of A, B and their complements. Each row tests P(X ∩ Y) against P(X)·P(Y) with tolerance 0.005.' }));
     ct.append(h('thead', {}, [h('tr', {}, [
       h('th', { text: 'Events' }), h('th', { class: 'num', text: 'n(X ∩ Y)' }),
       h('th', { class: 'num', text: 'P(X ∩ Y)' }), h('th', { class: 'num', text: 'P(X)·P(Y)' }),
@@ -968,7 +968,7 @@
     const caption = h('p', {
       id: 'compCaption', class: 'muted-line',
       text: abIndep
-        ? 'A and B from §2 are approximately independent, and — as the lecture fact promises — so are the mixed pairs A ∩ B′, A′ ∩ B and A′ ∩ B′.'
+        ? 'A and B from §2 are approximately independent, and, as the lecture fact promises, so are the mixed pairs A ∩ B′, A′ ∩ B and A′ ∩ B′.'
         : 'A and B from §2 are not independent, so the lecture fact makes no promise here; each mixed pair is checked on its own merits.'
     });
     const tableWrap = ct.parentNode; // .table-scroll
@@ -991,7 +991,7 @@
     ];
     const tt = document.getElementById('threeTable');
     tt.innerHTML = '';
-    tt.append(h('caption', { text: 'Table 4.2 — Mutual independence of A, B and C (C = {' + describeEvent(evC) + '}). All four conditions must hold.' }));
+    tt.append(h('caption', { text: 'Table 4.2. Mutual independence of A, B and C (C = {' + describeEvent(evC) + '}). All four conditions must hold.' }));
     tt.append(h('thead', {}, [h('tr', {}, [
       h('th', { text: 'Condition' }), h('th', { class: 'num', text: 'left side' }),
       h('th', { class: 'num', text: 'right side' }), h('th', { text: 'Holds?' })
@@ -1012,13 +1012,13 @@
     verdict.innerHTML = '';
     let vText, vCls;
     if (flags[0] && flags[1] && flags[2] && flags[3]) {
-      vText = 'Verdict: mutually independent — all four conditions hold within tolerance 0.005.';
+      vText = 'Verdict: mutually independent: all four conditions hold within tolerance 0.005.';
       vCls = 'ok';
     } else if (flags[0] && flags[1] && flags[2]) {
-      vText = 'Verdict: pairwise independent only — the three pairwise conditions hold but the triple product fails. Pairwise independence does not imply mutual independence.';
+      vText = 'Verdict: pairwise independent only. The three pairwise conditions hold but the triple product fails. Pairwise independence does not imply mutual independence.';
       vCls = 'no';
     } else {
-      vText = 'Verdict: not independent — at least one pairwise condition already fails.';
+      vText = 'Verdict: not independent: at least one pairwise condition already fails.';
       vCls = 'no';
     }
     verdict.append(h('div', { class: 'verdict ' + vCls }, [h('p', { text: vText })]));
@@ -1091,7 +1091,7 @@
     const post = Prob.bayes(groups.map(function (g) { return g.prior; }), groups.map(function (g) { return g.lik; }));
 
     renderTree(groups, evLabel);
-    document.getElementById('treeCaption').textContent = 'Figure 5.1 — Probability tree by ' + part.label.toLowerCase() + ': multiply along each path to get P(Hᵢ ∩ E).';
+    document.getElementById('treeCaption').textContent = 'Figure 5.1. Probability tree by ' + part.label.toLowerCase() + ': multiply along each path to get P(Hᵢ ∩ E).';
 
     const out = document.getElementById('totalOut');
     out.innerHTML = '';
@@ -1106,7 +1106,7 @@
     // Bayes table
     const bt = document.getElementById('bayesTable');
     bt.innerHTML = '';
-    bt.append(h('caption', { text: 'Table 5.1 — Total probability and Bayes’ theorem by ' + part.label.toLowerCase() + ' for E = {' + evLabel + '}. The last column is the posterior: the share of ' + (state.bayesEv === '1' ? 'survivors' : 'the dead') + ' coming from each group.' }));
+    bt.append(h('caption', { text: 'Table 5.1. Total probability and Bayes’ theorem by ' + part.label.toLowerCase() + ' for E = {' + evLabel + '}. The last column is the posterior: the share of ' + (state.bayesEv === '1' ? 'survivors' : 'the dead') + ' coming from each group.' }));
     bt.append(h('thead', {}, [h('tr', {}, [
       h('th', { text: 'Hᵢ' }), h('th', { class: 'num', text: 'P(Hᵢ)' }),
       h('th', { class: 'num', text: 'P(E | Hᵢ)' }), h('th', { class: 'num', text: 'P(Hᵢ)·P(E | Hᵢ)' }),
@@ -1121,7 +1121,7 @@
       tb.append(h('tr', {}, [
         h('td', { text: g.label }),
         h('td', { class: 'num' }, [g.nH + ' / ' + N + ' = ' + fmt(g.prior), h('span', { class: 'frac-note', text: 'prior' })]),
-        h('td', { class: 'num' }, [g.nH === 0 ? '—' : g.nHE + ' / ' + g.nH + ' = ' + fmt(g.lik)]),
+        h('td', { class: 'num' }, [g.nH === 0 ? 'n/a' : g.nHE + ' / ' + g.nH + ' = ' + fmt(g.lik)]),
         h('td', { class: 'num', text: fmt(tp.terms[i]) }),
         h('td', { class: 'num' }, [fmt(post[i]) + ' (' + pct(post[i]) + ')', h('span', { class: 'frac-note', text: 'posterior' })])
       ]));
@@ -1150,7 +1150,7 @@
     tex(pEl, 'P(' + evLabel + ')=\\frac{n(' + evLabel + ')}{n(S)}=' + fracTex(nE, N) + '=' + fmt(Prob.p(nE, N)) + '\\quad\\text{(direct count)}', true);
     ver.append(h('div', { class: 'verdict ' + (Math.abs(tp.total - Prob.p(nE, N)) < 1e-9 ? 'ok' : 'no') }, [
       h('p', {}, [h('span', { class: 'v-title', text: 'Verification. ' }),
-        document.createTextNode('The total from the partition (' + fmt(tp.total) + ') equals the direct count n(E)/n(S) = ' + int(nE) + ' / ' + int(N) + ' = ' + fmt(Prob.p(nE, N)) + '. The partition is complete — every passenger falls in exactly one group — so the two must agree.')]),
+        document.createTextNode('The total from the partition (' + fmt(tp.total) + ') equals the direct count n(E)/n(S) = ' + int(nE) + ' / ' + int(N) + ' = ' + fmt(Prob.p(nE, N)) + '. The partition is complete (every passenger falls in exactly one group), so the two must agree.')]),
       pEl
     ]));
   }
@@ -1245,7 +1245,7 @@
       const info = profileProb(prof);
       const pEl = h('span', { class: 'boat-p' });
       if (info.p === null) {
-        pEl.append(h('span', { class: 'nodata', text: 'no data — excluded' }));
+        pEl.append(h('span', { class: 'nodata', text: 'no data, excluded' }));
       } else {
         pEl.textContent = 'p' + (i + 1) + ' = ' + info.ns + ' / ' + info.n + ' = ' + fmt(info.p) + ' (' + pct(info.p) + ')';
       }
@@ -1271,7 +1271,7 @@
     out.innerHTML = '';
     const ps = validBoatPs();
     if (!ps.length) {
-      out.append(h('p', { class: 'muted-line', text: 'No passenger with data in the group yet — adjust the profiles.' }));
+      out.append(h('p', { class: 'muted-line', text: 'No passenger with data in the group yet. Adjust the profiles.' }));
       return;
     }
     const subs = ps.map(function (p) { return fmt(p); }).join('\\cdot');
@@ -1343,7 +1343,7 @@
     const q = Prob.successDistribution(ps);
     const m = q.length - 1;
     const tbl = h('table');
-    tbl.append(h('caption', { text: 'Table 7.1 — Distribution of X = number of survivors among the ' + ps.length + ' passengers of the lifeboat group.' }));
+    tbl.append(h('caption', { text: 'Table 7.1. Distribution of X = number of survivors among the ' + ps.length + ' passengers of the lifeboat group.' }));
     tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'x' }), h('th', { class: 'num', text: 'P(X = x)' })])]));
     const tb = h('tbody');
     q.forEach(function (prob, k) {
@@ -1395,7 +1395,7 @@
     const maxY = Math.max.apply(null, Object.keys(st.counts).map(Number));
     const tbl = document.getElementById('famTable');
     tbl.innerHTML = '';
-    tbl.append(h('caption', { text: 'Table 7.2 — Empirical distribution of Y = family size aboard (' + (state.famFilter === 'all' ? 'all passengers' : state.famFilter + ' class') + ').' }));
+    tbl.append(h('caption', { text: 'Table 7.2. Empirical distribution of Y = family size aboard (' + (state.famFilter === 'all' ? 'all passengers' : state.famFilter + ' class') + ').' }));
     tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'y' }), h('th', { class: 'num', text: 'n(Y = y)' }), h('th', { class: 'num', text: 'P(Y = y)' })])]));
     const tb = h('tbody');
     let sum = 0;
@@ -1426,7 +1426,7 @@
     // E(Y) by class
     const ct = document.getElementById('famClassTable');
     ct.innerHTML = '';
-    ct.append(h('caption', { text: 'Table 7.3 — Expected family size by class (computed on all passengers, ignoring the filter above).' }));
+    ct.append(h('caption', { text: 'Table 7.3. Expected family size by class (computed on all passengers, ignoring the filter above).' }));
     ct.append(h('thead', {}, [h('tr', {}, [h('th', { text: 'Class' }), h('th', { class: 'num', text: 'n' }), h('th', { class: 'num', text: 'E(Y)' })])]));
     const tb2 = h('tbody');
     const allSt = famStats(rows);
@@ -1445,7 +1445,7 @@
   function renderClassZ() {
     const tbl = document.getElementById('classTable');
     tbl.innerHTML = '';
-    tbl.append(h('caption', { text: 'Table 7.4 — Distribution of Z = ticket class of a randomly chosen passenger.' }));
+    tbl.append(h('caption', { text: 'Table 7.4. Distribution of Z = ticket class of a randomly chosen passenger.' }));
     tbl.append(h('thead', {}, [h('tr', {}, [h('th', { class: 'num', text: 'z' }), h('th', { class: 'num', text: 'n' }), h('th', { class: 'num', text: 'P(Z = z)' })])]));
     const tb = h('tbody');
     let ez = 0;
@@ -1545,7 +1545,7 @@
     const dx = Prob.describe(pr.xs), dy = Prob.describe(pr.ys);
     const dt = document.getElementById('descTable');
     dt.innerHTML = '';
-    dt.append(h('caption', { text: 'Table 8.1 — Descriptive statistics for X = ' + vx.label.toLowerCase() + ' and Y = ' + vy.label.toLowerCase() + '.' }));
+    dt.append(h('caption', { text: 'Table 8.1. Descriptive statistics for X = ' + vx.label.toLowerCase() + ' and Y = ' + vy.label.toLowerCase() + '.' }));
     dt.append(h('thead', {}, [h('tr', {}, [h('th', { text: 'Statistic' }), h('th', { class: 'num', text: 'X' }), h('th', { class: 'num', text: 'Y' })])]));
     const tb = h('tbody');
     [['n', 'n'], ['mean', 'mean'], ['median', 'median'], ['min', 'min'], ['max', 'max'], ['sd', 'sd']].forEach(function (rowDef) {
@@ -1561,7 +1561,7 @@
     // survivors vs non-survivors comparison (fixed: age, fare)
     const cmp = document.getElementById('cmpTable');
     cmp.innerHTML = '';
-    cmp.append(h('caption', { text: 'Table 8.2 — Age and fare by survival status.' }));
+    cmp.append(h('caption', { text: 'Table 8.2. Age and fare by survival status.' }));
     cmp.append(h('thead', {}, [h('tr', {}, [
       h('th', { text: 'Variable' }), h('th', { text: 'Group' }),
       h('th', { class: 'num', text: 'n' }), h('th', { class: 'num', text: 'mean' }),
@@ -1586,8 +1586,8 @@
     cmp.append(tb2);
 
     // histograms
-    document.getElementById('histXCap').textContent = 'Figure 8.1 — Histogram of X = ' + vx.label.toLowerCase() + '.';
-    document.getElementById('histYCap').textContent = 'Figure 8.2 — Histogram of Y = ' + vy.label.toLowerCase() + '.';
+    document.getElementById('histXCap').textContent = 'Figure 8.1. Histogram of X = ' + vx.label.toLowerCase() + '.';
+    document.getElementById('histYCap').textContent = 'Figure 8.2. Histogram of Y = ' + vy.label.toLowerCase() + '.';
     const hx = document.getElementById('histX'), hy = document.getElementById('histY');
     if (pr.xs.length) {
       histogram(hx, pr.xs, 13, vx.label);
@@ -1622,7 +1622,7 @@
       h('p', {}, [h('span', { class: 'v-title', text: test.reject ? 'Reject H₀.' : 'Do not reject H₀.' }),
         document.createTextNode(' |t| = ' + fmt(Math.abs(test.t)) + (test.reject ? ' > ' : ' ≤ ') + ' t_crit = ' + fmt(test.tCrit) +
           ', so the test ' + (test.reject ? 'rejects' : 'does not reject') + ' H₀: ρ = 0 at α = ' + fmt(state.statAlpha, 2) +
-          (test.reject ? ' — the correlation is statistically significant.' : ' — no statistically significant linear relationship.'))])]);
+          (test.reject ? ', so the correlation is statistically significant.' : ', so there is no statistically significant linear relationship.'))])]);
     out.append(verdict);
 
     // interpretation paragraph
@@ -1633,7 +1633,7 @@
       vx.label.toLowerCase() + ' and ' + vy.label.toLowerCase() + ' (' + STAT_GROUPS.filter(function (g) { return g.v === state.statGroup; })[0].label.toLowerCase() +
       '). With n = ' + int(cor.n) + ' complete observations the test statistic is t = ' + fmt(test.t) + ' on df = ' + test.df +
       ', giving a two-sided p-value of ' + fmtP(test.p) + '; at α = ' + fmt(state.statAlpha, 2) + ' the null hypothesis of no correlation is ' +
-      (test.reject ? 'rejected' : 'not rejected') + '. This measures linear association only and proves no causation: ticket class is an obvious confounder — it drives fare directly, and age profiles differ between classes — so part of the association may come from class rather than from the two variables themselves.' }));
+      (test.reject ? 'rejected' : 'not rejected') + '. This measures linear association only and proves no causation: ticket class is an obvious confounder (it drives fare directly, and age profiles differ between classes), so part of the association may come from class rather than from the two variables themselves.' }));
 
     // conclusion + CI for mean of Y
     const ci = Prob.meanCI(pr.ys, state.statAlpha);
@@ -1777,7 +1777,7 @@
     document.getElementById('quizScore').textContent = 'Score: ' + quiz.score + ' / ' + quiz.total;
     const res = document.getElementById('quizResult');
     res.className = correct ? 'ok' : 'no';
-    res.textContent = correct ? '✓ Correct.' : '✗ Not quite — the correct answer is ' + (quiz.q.yesno ? (quiz.q.answer ? 'yes' : 'no') : fmt(quiz.q.answer)) + '.';
+    res.textContent = correct ? '✓ Correct.' : '✗ Not quite. The correct answer is ' + (quiz.q.yesno ? (quiz.q.answer ? 'yes' : 'no') : fmt(quiz.q.answer)) + '.';
     document.getElementById('quizShow').hidden = false;
   }
 

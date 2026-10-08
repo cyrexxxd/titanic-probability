@@ -20,12 +20,12 @@
     <p class="kicker">Interactive lab &middot; Probability theory and statistics</p>
     <h1>Probability on the Titanic</h1>
     <p class="subtitle">An interactive lab in probability theory and statistics, built on the passenger list of RMS&nbsp;Titanic (1912).</p>
-    <p class="abstract">Every number on this page is computed in your browser from the actual passenger list of the Titanic — no prepared answers. The experiment behind each probability is always the same: choose one of the <span class="js-n">1,309</span> passengers uniformly at random, and ask how likely the chosen passenger is to have a given property. Classical probability, the addition and multiplication rules, independence, total probability and Bayes' theorem, random variables and a full correlation study are all applied to this single dataset, so formulas and data can be checked against each other at every step.</p>
+    <p class="abstract">Every number on this page is computed in your browser from the actual passenger list of the Titanic, with no prepared answers. The experiment behind each probability is always the same: choose one of the <span class="js-n">1,309</span> passengers uniformly at random, and ask how likely the chosen passenger is to have a given property. Classical probability, the addition and multiplication rules, independence, total probability and Bayes' theorem, random variables and a full correlation study are all applied to this single dataset, so formulas and data can be checked against each other at every step.</p>
     <dl class="key-figures" id="keyFigures">
-      <div class="key-figure"><dt>Passengers on the list</dt><dd id="kfN">&mdash;</dd></div>
-      <div class="key-figure"><dt>Survived</dt><dd id="kfS">&mdash;</dd></div>
-      <div class="key-figure"><dt>P(survived)</dt><dd id="kfP">&mdash;</dd></div>
-      <div class="key-figure"><dt>P(survived&nbsp;|&nbsp;female) vs P(survived&nbsp;|&nbsp;male)</dt><dd id="kfFM">&mdash;</dd></div>
+      <div class="key-figure"><dt>Passengers on the list</dt><dd id="kfN"></dd></div>
+      <div class="key-figure"><dt>Survived</dt><dd id="kfS"></dd></div>
+      <div class="key-figure"><dt>P(survived)</dt><dd id="kfP"></dd></div>
+      <div class="key-figure"><dt>P(survived&nbsp;|&nbsp;female) vs P(survived&nbsp;|&nbsp;male)</dt><dd id="kfFM"></dd></div>
     </dl>
   </div>
 </header>
@@ -55,7 +55,7 @@
   <!-- ==================== 1 ==================== -->
   <section id="sec1" aria-labelledby="h1">
     <h2 id="h1"><span class="sec-num">1</span>The data</h2>
-    <p>The dataset is <strong>titanic3</strong>, maintained by the Vanderbilt University Department of Biostatistics. It lists <span class="js-n">1,309</span> passengers — the crew is not included — with ticket class, sex, age, family relations, fare and port of embarkation, plus whether the person survived the sinking on 15 April 1912.</p>
+    <p>The dataset is <strong>titanic3</strong>, maintained by the Vanderbilt University Department of Biostatistics. It lists <span class="js-n">1,309</span> passengers (the crew is not included) with ticket class, sex, age, family relations, fare and port of embarkation, plus whether the person survived the sinking on 15 April 1912.</p>
     <h3>Variables</h3>
     <div class="table-scroll"><table id="varTable" aria-label="Variables in the dataset"></table></div>
     <h3>Caveats</h3>
@@ -87,7 +87,7 @@
         <div id="verdicts"></div>
         <figure class="fig">
           <div id="venn"></div>
-          <figcaption class="figure-caption" id="vennCaption">Figure 2.1 — The four regions of the sample space, with passenger counts.</figcaption>
+          <figcaption class="figure-caption" id="vennCaption">Figure 2.1. The four regions of the sample space, with passenger counts.</figcaption>
         </figure>
       </div>
     </div>
@@ -100,7 +100,7 @@
       <div class="sim-last" id="simLast" aria-live="polite"></div>
       <figure class="fig">
         <div id="simChart"></div>
-        <figcaption class="figure-caption">Figure 2.2 — Running relative frequencies f(A) and f(B) after each draw; dashed lines mark the probabilities P(A) and P(B).</figcaption>
+        <figcaption class="figure-caption">Figure 2.2. Running relative frequencies f(A) and f(B) after each draw; dashed lines mark the probabilities P(A) and P(B).</figcaption>
       </figure>
       <p class="muted-line" id="simNote"></p>
     </div>
@@ -113,7 +113,7 @@
     <p>How likely was survival, given that the chosen passenger belonged to a particular group? Each bar is a conditional probability <span class="tex" data-tex="P(\text{survived}\mid G)=n(\text{survived}\cap G)/n(G)"></span>, sorted from most to least fortunate.</p>
     <figure class="fig">
       <div id="groupBars"></div>
-      <figcaption class="figure-caption">Figure 3.1 — P(survived&nbsp;|&nbsp;group) for classes, sexes, age groups and class&times;sex combinations.</figcaption>
+      <figcaption class="figure-caption">Figure 3.1. P(survived&nbsp;|&nbsp;group) for classes, sexes, age groups and class&times;sex combinations.</figcaption>
     </figure>
     <h3>3.2&ensp;Drawing passengers one after another</h3>
     <p>Now change the experiment: draw <em>k</em> passengers <strong>without replacement</strong>. The probability that all <em>k</em> belong to a group <em>A</em> needs the chain rule, because each draw changes what is left in the list. Drawing <em>with</em> replacement restores independence between draws.</p>
@@ -131,11 +131,11 @@
     <p>Using the events <em>A</em> and <em>B</em> from §2, the table below checks the lecture fact: if <em>A</em> and <em>B</em> are independent, then so are <span class="tex" data-tex="A'"></span> and <span class="tex" data-tex="B'"></span>, <em>A</em> and <span class="tex" data-tex="B'"></span>, and <span class="tex" data-tex="A'"></span> and <em>B</em>.</p>
     <div class="table-scroll"><table id="compTable" aria-label="Independence of complements"></table></div>
     <h3>4.2&ensp;Three events</h3>
-    <p>With the third event <em>C</em> from §2 (if defined; otherwise <span class="tex" data-tex="C=\{\text{embarked at Southampton}\}"></span>), mutual independence requires all four product conditions at once — pairwise independence alone is not enough.</p>
+    <p>With the third event <em>C</em> from §2 (if defined; otherwise <span class="tex" data-tex="C=\{\text{embarked at Southampton}\}"></span>), mutual independence requires all four product conditions at once; pairwise independence alone is not enough.</p>
     <div class="table-scroll"><table id="threeTable" aria-label="Mutual independence of three events"></table></div>
     <div id="threeVerdict"></div>
     <div class="note-box" id="indepNote">
-      <p><strong>Independence is an assumption about the model, not about the people.</strong> Real Titanic survival was not independent across passengers: families went to the lifeboats together, so one family member surviving made others more likely to survive. That is exactly the lecture's &ldquo;crooked gambler&rdquo; situation — independence fails whenever a hidden common factor (here: family membership, ticket class, access to boats) links the trials. The independence calculations in §6 are therefore a deliberate modelling assumption, which is why each result is labelled as such.</p>
+      <p><strong>Independence is an assumption about the model, not about the people.</strong> Real Titanic survival was not independent across passengers: families went to the lifeboats together, so one family member surviving made others more likely to survive. That is exactly the lecture's &ldquo;crooked gambler&rdquo; situation: independence fails whenever a hidden common factor (here: family membership, ticket class, access to boats) links the trials. The independence calculations in §6 are therefore a deliberate modelling assumption, which is why each result is labelled as such.</p>
     </div>
   </section>
 
@@ -147,7 +147,7 @@
       <div class="controls-row" id="bayesControls"></div>
       <figure class="fig">
         <div id="tree"></div>
-        <figcaption class="figure-caption" id="treeCaption">Figure 5.1 — Probability tree: branch probabilities multiply along each path.</figcaption>
+        <figcaption class="figure-caption" id="treeCaption">Figure 5.1. Probability tree: branch probabilities multiply along each path.</figcaption>
       </figure>
       <div id="totalOut" class="math-out" aria-live="polite"></div>
       <div class="table-scroll"><table id="bayesTable" aria-label="Bayes theorem table"></table></div>
@@ -160,7 +160,7 @@
   <section id="sec6" aria-labelledby="h6">
     <h2 id="h6"><span class="sec-num">6</span>Several independent passengers</h2>
     <h3>6.1&ensp;Lifeboat group</h3>
-    <p>Assemble a hypothetical group of 1–8 passengers by profile. For each member, the probability of survival <span class="tex" data-tex="p_i=P(\text{survived}\mid\text{profile}_i)"></span> is read off the data. The results below all assume the members survive <strong>independently</strong> — the caveat of §4 applies in full.</p>
+    <p>Assemble a hypothetical group of 1–8 passengers by profile. For each member, the probability of survival <span class="tex" data-tex="p_i=P(\text{survived}\mid\text{profile}_i)"></span> is read off the data. The results below all assume the members survive <strong>independently</strong>, and the caveat of §4 applies in full.</p>
     <div class="panel">
       <div id="boatRows"></div>
       <div class="controls-row"><button type="button" id="addBoat" class="btn">Add passenger</button></div>
@@ -173,7 +173,7 @@
       <div id="streakOut" class="math-out" aria-live="polite"></div>
       <figure class="fig">
         <div id="streakChart"></div>
-        <figcaption class="figure-caption">Figure 6.1 — P(all n survived) = p<sup>n</sup> as a function of n.</figcaption>
+        <figcaption class="figure-caption">Figure 6.1. P(all n survived) = p<sup>n</sup> as a function of n.</figcaption>
       </figure>
     </div>
   </section>
@@ -181,16 +181,16 @@
   <!-- ==================== 7 ==================== -->
   <section id="sec7" aria-labelledby="h7">
     <h2 id="h7"><span class="sec-num">7</span>Random variables</h2>
-    <h3>7.1&ensp;X — number of survivors in the lifeboat group</h3>
+    <h3>7.1&ensp;X: number of survivors in the lifeboat group</h3>
     <p>The distribution of <span class="tex" data-tex="X"></span> is built by the multiplication rule applied recursively: start with <span class="tex" data-tex="q[0]=1"></span>; after adding a passenger who survives with probability <span class="tex" data-tex="p_i"></span>, update <span class="tex" data-tex="q_{\text{new}}[k]=q[k](1-p_i)+q[k-1]p_i"></span>. This is the product rule for &ldquo;exactly <em>k</em> successes&rdquo;, one passenger at a time.</p>
     <div class="panel">
       <div id="distXOut"></div>
       <figure class="fig">
         <div id="distXChart"></div>
-        <figcaption class="figure-caption">Figure 7.1 — Distribution of the number of survivors in the group from §6.1.</figcaption>
+        <figcaption class="figure-caption">Figure 7.1. Distribution of the number of survivors in the group from §6.1.</figcaption>
       </figure>
     </div>
-    <h3>7.2&ensp;Y — family size aboard</h3>
+    <h3>7.2&ensp;Y: family size aboard</h3>
     <p>Let <span class="tex" data-tex="Y=\text{sibsp}+\text{parch}+1"></span> be the number of people from one family on board, and define a passenger as travelling alone when <span class="tex" data-tex="Y=1"></span>. This is an empirical distribution straight from the data.</p>
     <div class="panel">
       <div class="controls-row" id="famControls"></div>
@@ -198,11 +198,11 @@
       <div id="famOut"></div>
       <figure class="fig">
         <div id="famChart"></div>
-        <figcaption class="figure-caption">Figure 7.2 — P(Y = y) for the selected filter; E(Y) by class is compared below the table.</figcaption>
+        <figcaption class="figure-caption">Figure 7.2. P(Y = y) for the selected filter; E(Y) by class is compared below the table.</figcaption>
       </figure>
       <div class="table-scroll"><table id="famClassTable" aria-label="Mean family size by class"></table></div>
     </div>
-    <h3>7.3&ensp;Z — ticket class</h3>
+    <h3>7.3&ensp;Z: ticket class</h3>
     <p>The simplest non-trivial example: <span class="tex" data-tex="Z\in\{1,2,3\}"></span> with probabilities equal to the class shares of the list.</p>
     <div class="table-scroll"><table id="classTable" aria-label="Distribution of ticket class"></table></div>
   </section>
@@ -212,7 +212,7 @@
     <h2 id="h8"><span class="sec-num">8</span>Statistical analysis</h2>
     <p>This section follows the course's statistics project template, applied to the same passenger list.</p>
     <h3>8.1&ensp;Real-world problem</h3>
-    <p>Passengers paid very different fares for the same crossing, and age profiles differed between classes. Understanding whether two numeric variables move together — and how strongly — is the basic question of bivariate statistics.</p>
+    <p>Passengers paid very different fares for the same crossing, and age profiles differed between classes. Understanding whether two numeric variables move together, and how strongly, is the basic question of bivariate statistics.</p>
     <h3>8.2&ensp;Research question</h3>
     <p id="researchQuestion"></p>
     <h3>8.3&ensp;Data</h3>
@@ -222,22 +222,22 @@
       <p id="statDropped" class="muted-line"></p>
       <div class="table-scroll"><table id="descTable" aria-label="Descriptive statistics"></table></div>
     </div>
-    <p>For orientation, here is the standard comparison of the two most interesting variables — age and fare — between survivors and non-survivors:</p>
+    <p>For orientation, here is the standard comparison of the two most interesting variables, age and fare, between survivors and non-survivors:</p>
     <div class="table-scroll"><table id="cmpTable" aria-label="Age and fare for survivors and non-survivors"></table></div>
     <h3>8.4&ensp;Methods</h3>
     <p>Descriptive statistics (sample mean, median, extremes, sample standard deviation <span class="tex" data-tex="s=\sqrt{\frac{\sum(x_i-\bar{x})^2}{n-1}}"></span>), histograms, the Pearson correlation coefficient <span class="tex" data-tex="r=\frac{S_{xy}}{\sqrt{S_{xx}S_{yy}}}"></span>, the least-squares line <span class="tex" data-tex="\hat{y}=a+bx"></span> with <span class="tex" data-tex="b=S_{xy}/S_{xx}"></span>, and the two-sided t-test of <span class="tex" data-tex="H_0:\rho=0"></span> against <span class="tex" data-tex="H_1:\rho\neq0"></span> with <span class="tex" data-tex="t=\frac{r\sqrt{n-2}}{\sqrt{1-r^2}}"></span> on <span class="tex" data-tex="n-2"></span> degrees of freedom. The p-value and critical values come from the Student t distribution, computed here by the regularized incomplete beta function. A <span class="tex" data-tex="(1-\alpha)"></span> confidence interval for the mean of Y closes the analysis.</p>
     <h3>8.5&ensp;Results</h3>
     <figure class="fig">
       <div id="histX"></div>
-      <figcaption class="figure-caption" id="histXCap">Figure 8.1 — Histogram of X.</figcaption>
+      <figcaption class="figure-caption" id="histXCap">Figure 8.1. Histogram of X.</figcaption>
     </figure>
     <figure class="fig">
       <div id="histY"></div>
-      <figcaption class="figure-caption" id="histYCap">Figure 8.2 — Histogram of Y.</figcaption>
+      <figcaption class="figure-caption" id="histYCap">Figure 8.2. Histogram of Y.</figcaption>
     </figure>
     <figure class="fig">
       <div id="scatter"></div>
-      <figcaption class="figure-caption">Figure 8.3 — Scatter plot of Y against X with the fitted least-squares line.</figcaption>
+      <figcaption class="figure-caption">Figure 8.3. Scatter plot of Y against X with the fitted least-squares line.</figcaption>
     </figure>
     <div id="corrOut" class="math-out" aria-live="polite"></div>
     <h3>8.6&ensp;Interpretation</h3>

@@ -1,4 +1,4 @@
-/* prob.js — pure probability & statistics functions for the Titanic lab.
+/* prob.js: pure probability & statistics functions for the Titanic lab.
    No DOM access. Exposed as window.Prob in the browser and module.exports in Node. */
 (function (global) {
   'use strict';
@@ -261,7 +261,7 @@
 
   function fmt(x, d) {
     if (d === undefined) d = 4;
-    if (typeof x !== 'number' || !isFinite(x)) return '—';
+    if (typeof x !== 'number' || !isFinite(x)) return 'n/a';
     return x.toFixed(d);
   }
 
