@@ -245,11 +245,6 @@ input[type="range"] { accent-color: var(--accent); }
   max-width: 760px;
 }
 .note-box p { margin: 6px 0; }
-.model-box {
-  border: 1px solid var(--rule); border-left: 3px solid var(--accent);
-  background: var(--panel); padding: 10px 16px; margin: 16px 0; font-size: 16px;
-  max-width: 760px;
-}
 
 .muted-line { font-family: var(--sans); font-size: 13.5px; color: var(--muted); margin: 6px 0; }
 

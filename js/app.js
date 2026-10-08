@@ -334,17 +334,6 @@
         h('td', { class: 'num', html: ns + ' / ' + n + ' = ' + fmt(p) })
       ]);
     }
-
-    const mb = document.getElementById('modelBox1');
-    mb.innerHTML = '';
-    const p = h('p');
-    tex(p, 'P(A)=\\frac{n(A)}{n(S)}', false);
-    mb.append(
-      h('p', {}, [h('strong', { text: 'The probability model. ' }),
-        document.createTextNode(' The experiment behind every probability on this page is: choose one passenger uniformly at random from the ' + int(N) + ' on the list. The sample space S is the set of all passengers, n(S) = ' + int(N) + ', and for any event A the classical definition applies: ')]),
-      p,
-      h('p', { text: 'Both the counting fraction and its decimal value (4 dp) are always shown, so that every number can be traced back to a count of passengers.' })
-    );
   }
 
   /* ================= table of contents ================= */
