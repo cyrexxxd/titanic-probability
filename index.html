@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Probability on the Titanic</title>
+<meta name="description" content="An interactive lab in probability theory and statistics, built on the passenger list of RMS Titanic (1912). All probabilities are computed live in your browser from the titanic3 dataset.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%231f3a5f' stroke-width='3'/%3E%3Cpath d='M16 3v26M3 16h26M6.8 6.8l18.4 18.4M25.2 6.8L6.8 25.2' stroke='%231f3a5f' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%231f3a5f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <p class="kicker">Interactive lab &middot; Probability theory and statistics</p>
+    <h1>Probability on the Titanic</h1>
+    <p class="subtitle">An interactive lab in probability theory and statistics, built on the passenger list of RMS&nbsp;Titanic (1912).</p>
+    <p class="abstract">Every number on this page is computed in your browser from the actual passenger list of the Titanic — no prepared answers. The experiment behind each probability is always the same: choose one of the <span class="js-n">1,309</span> passengers uniformly at random, and ask how likely the chosen passenger is to have a given property. Classical probability, the addition and multiplication rules, independence, total probability and Bayes' theorem, random variables and a full correlation study are all applied to this single dataset, so formulas and data can be checked against each other at every step.</p>
+    <dl class="key-figures" id="keyFigures">
+      <div class="key-figure"><dt>Passengers on the list</dt><dd id="kfN">&mdash;</dd></div>
+      <div class="key-figure"><dt>Survived</dt><dd id="kfS">&mdash;</dd></div>
+      <div class="key-figure"><dt>P(survived)</dt><dd id="kfP">&mdash;</dd></div>
+      <div class="key-figure"><dt>P(survived&nbsp;|&nbsp;female) vs P(survived&nbsp;|&nbsp;male)</dt><dd id="kfFM">&mdash;</dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="wrap layout">
+
+  <nav class="toc" id="toc" aria-label="Table of contents">
+    <details class="toc-disclosure" id="tocDetails">
+      <summary>Contents</summary>
+      <ol class="toc-list">
+        <li><a href="#sec1"><span class="toc-num">1</span>The data</a></li>
+        <li><a href="#sec2"><span class="toc-num">2</span>Events and the addition rule</a></li>
+        <li><a href="#sec3"><span class="toc-num">3</span>Conditional probability</a></li>
+        <li><a href="#sec4"><span class="toc-num">4</span>Independence</a></li>
+        <li><a href="#sec5"><span class="toc-num">5</span>Total probability and Bayes</a></li>
+        <li><a href="#sec6"><span class="toc-num">6</span>Several independent passengers</a></li>
+        <li><a href="#sec7"><span class="toc-num">7</span>Random variables</a></li>
+        <li><a href="#sec8"><span class="toc-num">8</span>Statistical analysis</a></li>
+        <li><a href="#sec9"><span class="toc-num">9</span>Self-check</a></li>
+        <li><a href="#sec10"><span class="toc-num">10</span>Formula reference</a></li>
+      </ol>
+    </details>
+  </nav>
+
+  <main id="main">
+
+  <!-- ==================== 1 ==================== -->
+  <section id="sec1" aria-labelledby="h1">
+    <h2 id="h1"><span class="sec-num">1</span>The data</h2>
+    <p>The dataset is <strong>titanic3</strong>, maintained by the Vanderbilt University Department of Biostatistics. It lists <span class="js-n">1,309</span> passengers — the crew is not included — with ticket class, sex, age, family relations, fare and port of embarkation, plus whether the person survived the sinking on 15 April 1912.</p>
+    <h3>Variables</h3>
+    <div class="table-scroll"><table id="varTable" aria-label="Variables in the dataset"></table></div>
+    <h3>Caveats</h3>
+    <ul>
+      <li>Age is missing for <span class="js-ageMissing">263</span> passengers (about one in five). Events built on age therefore use only passengers with a known age, and &ldquo;age unknown&rdquo; is treated as its own group.</li>
+      <li>Fare is missing for 1 passenger; port of embarkation is missing for 2. Rows with a missing value are excluded from calculations that need that variable.</li>
+      <li>These are historical records, not a random sample of any larger population: every probability on this page is a relative frequency <em>of this list</em>, not an estimate for Edwardian ocean travel in general.</li>
+    </ul>
+    <h3>Who was on board</h3>
+    <div class="table-scroll"><table id="contTable" aria-label="Contingency table of class, sex and survival"></table></div>
+    <p class="figure-caption" id="contCaption"></p>
+    <div class="model-box" id="modelBox1"></div>
+  </section>
+
+  <!-- ==================== 2 ==================== -->
+  <section id="sec2" aria-labelledby="h2">
+    <h2 id="h2"><span class="sec-num">2</span>Events and the addition rule</h2>
+    <p>Build two events, <em>A</em> and <em>B</em>, by combining conditions. All counts and probabilities below are recomputed from the passenger list every time a selector changes.</p>
+    <div class="panel" id="eventBuilder">
+      <div class="preset-row" role="group" aria-label="Preset events" id="presetRow"></div>
+      <div class="event-grid" id="eventControls"></div>
+      <div class="event-toggle">
+        <label><input type="checkbox" id="cToggle"> Define a third event <em>C</em> (used in §4)</label>
+        <div id="cControls" hidden></div>
+      </div>
+      <div class="event-output" id="eventOutput" aria-live="polite"></div>
+      <div class="event-extra">
+        <div id="verdicts"></div>
+        <figure class="fig">
+          <div id="venn"></div>
+          <figcaption class="figure-caption" id="vennCaption">Figure 2.1 — The four regions of the sample space, with passenger counts.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 3 ==================== -->
+  <section id="sec3" aria-labelledby="h3">
+    <h2 id="h3"><span class="sec-num">3</span>Conditional probability</h2>
+    <h3>3.1&ensp;Survival rate by group</h3>
+    <p>How likely was survival, given that the chosen passenger belonged to a particular group? Each bar is a conditional probability <span class="tex" data-tex="P(\text{survived}\mid G)=n(\text{survived}\cap G)/n(G)"></span>, sorted from most to least fortunate.</p>
+    <figure class="fig">
+      <div id="groupBars"></div>
+      <figcaption class="figure-caption">Figure 3.1 — P(survived&nbsp;|&nbsp;group) for classes, sexes, age groups and class&times;sex combinations.</figcaption>
+    </figure>
+    <h3>3.2&ensp;Drawing passengers one after another</h3>
+    <p>Now change the experiment: draw <em>k</em> passengers <strong>without replacement</strong>. The probability that all <em>k</em> belong to a group <em>A</em> needs the chain rule, because each draw changes what is left in the list. Drawing <em>with</em> replacement restores independence between draws.</p>
+    <div class="panel">
+      <div class="controls-row" id="drawControls"></div>
+      <div id="drawOut" class="math-out" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 4 ==================== -->
+  <section id="sec4" aria-labelledby="h4">
+    <h2 id="h4"><span class="sec-num">4</span>Independence</h2>
+    <p>Two events are independent when knowing that one happened tells you nothing about the other: <span class="tex" data-tex="P(A\cap B)=P(A)\,P(B)"></span>. With real data this equality almost never holds <em>exactly</em>, so this lab calls a pair of events &ldquo;approximately independent&rdquo; when the two sides differ by at most 0.005.</p>
+    <h3>4.1&ensp;Independence of complements</h3>
+    <p>Using the events <em>A</em> and <em>B</em> from §2, the table below checks the lecture fact: if <em>A</em> and <em>B</em> are independent, then so are <span class="tex" data-tex="A'"></span> and <span class="tex" data-tex="B'"></span>, <em>A</em> and <span class="tex" data-tex="B'"></span>, and <span class="tex" data-tex="A'"></span> and <em>B</em>.</p>
+    <div class="table-scroll"><table id="compTable" aria-label="Independence of complements"></table></div>
+    <h3>4.2&ensp;Three events</h3>
+    <p>With the third event <em>C</em> from §2 (if defined; otherwise <span class="tex" data-tex="C=\{\text{embarked at Southampton}\}"></span>), mutual independence requires all four product conditions at once — pairwise independence alone is not enough.</p>
+    <div class="table-scroll"><table id="threeTable" aria-label="Mutual independence of three events"></table></div>
+    <div id="threeVerdict"></div>
+    <div class="note-box" id="indepNote">
+      <p><strong>Independence is an assumption about the model, not about the people.</strong> Real Titanic survival was not independent across passengers: families went to the lifeboats together, so one family member surviving made others more likely to survive. That is exactly the lecture's &ldquo;crooked gambler&rdquo; situation — independence fails whenever a hidden common factor (here: family membership, ticket class, access to boats) links the trials. The independence calculations in §6 are therefore a deliberate modelling assumption, which is why each result is labelled as such.</p>
+    </div>
+  </section>
+
+  <!-- ==================== 5 ==================== -->
+  <section id="sec5" aria-labelledby="h5">
+    <h2 id="h5"><span class="sec-num">5</span>Total probability and Bayes</h2>
+    <p class="section-lede">Who survived? Split the passenger list into a partition <span class="tex" data-tex="H_1,\dots,H_m"></span>, then rebuild P(survived) from the survival rate inside each group, and finally reverse the conditioning with Bayes' theorem.</p>
+    <div class="panel">
+      <div class="controls-row" id="bayesControls"></div>
+      <figure class="fig">
+        <div id="tree"></div>
+        <figcaption class="figure-caption" id="treeCaption">Figure 5.1 — Probability tree: branch probabilities multiply along each path.</figcaption>
+      </figure>
+      <div id="totalOut" class="math-out" aria-live="polite"></div>
+      <div class="table-scroll"><table id="bayesTable" aria-label="Bayes theorem table"></table></div>
+      <p id="bayesNote"></p>
+      <div id="bayesVerify"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 6 ==================== -->
+  <section id="sec6" aria-labelledby="h6">
+    <h2 id="h6"><span class="sec-num">6</span>Several independent passengers</h2>
+    <h3>6.1&ensp;Lifeboat group</h3>
+    <p>Assemble a hypothetical group of 1–8 passengers by profile. For each member, the probability of survival <span class="tex" data-tex="p_i=P(\text{survived}\mid\text{profile}_i)"></span> is read off the data. The results below all assume the members survive <strong>independently</strong> — the caveat of §4 applies in full.</p>
+    <div class="panel">
+      <div id="boatRows"></div>
+      <div class="controls-row"><button type="button" id="addBoat" class="btn">Add passenger</button></div>
+      <div id="boatOut" class="math-out" aria-live="polite"></div>
+    </div>
+    <h3>6.2&ensp;Streaks</h3>
+    <p>The same product rule explains the lecture's two famous streak examples: Pete Rose's 44-game hitting streak and a string of 24 Christmas lights wired in series, where every bulb must work. Choose a group and <em>n</em>: the probability that <em>n</em> independently chosen passengers of this group all survived is <span class="tex" data-tex="p^n"></span>.</p>
+    <div class="panel">
+      <div class="controls-row" id="streakControls"></div>
+      <div id="streakOut" class="math-out" aria-live="polite"></div>
+      <figure class="fig">
+        <div id="streakChart"></div>
+        <figcaption class="figure-caption">Figure 6.1 — P(all n survived) = p<sup>n</sup> as a function of n.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ==================== 7 ==================== -->
+  <section id="sec7" aria-labelledby="h7">
+    <h2 id="h7"><span class="sec-num">7</span>Random variables</h2>
+    <h3>7.1&ensp;X — number of survivors in the lifeboat group</h3>
+    <p>The distribution of <span class="tex" data-tex="X"></span> is built by the multiplication rule applied recursively: start with <span class="tex" data-tex="q[0]=1"></span>; after adding a passenger who survives with probability <span class="tex" data-tex="p_i"></span>, update <span class="tex" data-tex="q_{\text{new}}[k]=q[k](1-p_i)+q[k-1]p_i"></span>. This is the product rule for &ldquo;exactly <em>k</em> successes&rdquo;, one passenger at a time.</p>
+    <div class="panel">
+      <div id="distXOut"></div>
+      <figure class="fig">
+        <div id="distXChart"></div>
+        <figcaption class="figure-caption">Figure 7.1 — Distribution of the number of survivors in the group from §6.1.</figcaption>
+      </figure>
+    </div>
+    <h3>7.2&ensp;Y — family size aboard</h3>
+    <p>Let <span class="tex" data-tex="Y=\text{sibsp}+\text{parch}+1"></span> be the number of people from one family on board, and define a passenger as travelling alone when <span class="tex" data-tex="Y=1"></span>. This is an empirical distribution straight from the data.</p>
+    <div class="panel">
+      <div class="controls-row" id="famControls"></div>
+      <div class="table-scroll"><table id="famTable" aria-label="Distribution of family size"></table></div>
+      <div id="famOut"></div>
+      <figure class="fig">
+        <div id="famChart"></div>
+        <figcaption class="figure-caption">Figure 7.2 — P(Y = y) for the selected filter; E(Y) by class is compared below the table.</figcaption>
+      </figure>
+      <div class="table-scroll"><table id="famClassTable" aria-label="Mean family size by class"></table></div>
+    </div>
+    <h3>7.3&ensp;Z — ticket class</h3>
+    <p>The simplest non-trivial example: <span class="tex" data-tex="Z\in\{1,2,3\}"></span> with probabilities equal to the class shares of the list.</p>
+    <div class="table-scroll"><table id="classTable" aria-label="Distribution of ticket class"></table></div>
+  </section>
+
+  <!-- ==================== 8 ==================== -->
+  <section id="sec8" aria-labelledby="h8">
+    <h2 id="h8"><span class="sec-num">8</span>Statistical analysis</h2>
+    <p>This section follows the course's statistics project template, applied to the same passenger list.</p>
+    <h3>8.1&ensp;Real-world problem</h3>
+    <p>Passengers paid very different fares for the same crossing, and age profiles differed between classes. Understanding whether two numeric variables move together — and how strongly — is the basic question of bivariate statistics.</p>
+    <h3>8.2&ensp;Research question</h3>
+    <p id="researchQuestion"></p>
+    <h3>8.3&ensp;Data</h3>
+    <p>The variables below are taken from the passenger list. Rows with a missing value in either variable are dropped; the number dropped is reported. A group filter restricts the analysis, e.g. to one class.</p>
+    <div class="panel">
+      <div class="controls-row" id="statControls"></div>
+      <p id="statDropped" class="muted-line"></p>
+      <div class="table-scroll"><table id="descTable" aria-label="Descriptive statistics"></table></div>
+    </div>
+    <p>For orientation, here is the standard comparison of the two most interesting variables — age and fare — between survivors and non-survivors:</p>
+    <div class="table-scroll"><table id="cmpTable" aria-label="Age and fare for survivors and non-survivors"></table></div>
+    <h3>8.4&ensp;Methods</h3>
+    <p>Descriptive statistics (sample mean, median, extremes, sample standard deviation <span class="tex" data-tex="s=\sqrt{\frac{\sum(x_i-\bar{x})^2}{n-1}}"></span>), histograms, the Pearson correlation coefficient <span class="tex" data-tex="r=\frac{S_{xy}}{\sqrt{S_{xx}S_{yy}}}"></span>, the least-squares line <span class="tex" data-tex="\hat{y}=a+bx"></span> with <span class="tex" data-tex="b=S_{xy}/S_{xx}"></span>, and the two-sided t-test of <span class="tex" data-tex="H_0:\rho=0"></span> against <span class="tex" data-tex="H_1:\rho\neq0"></span> with <span class="tex" data-tex="t=\frac{r\sqrt{n-2}}{\sqrt{1-r^2}}"></span> on <span class="tex" data-tex="n-2"></span> degrees of freedom. The p-value and critical values come from the Student t distribution, computed here by the regularized incomplete beta function. A <span class="tex" data-tex="(1-\alpha)"></span> confidence interval for the mean of Y closes the analysis.</p>
+    <h3>8.5&ensp;Results</h3>
+    <figure class="fig">
+      <div id="histX"></div>
+      <figcaption class="figure-caption" id="histXCap">Figure 8.1 — Histogram of X.</figcaption>
+    </figure>
+    <figure class="fig">
+      <div id="histY"></div>
+      <figcaption class="figure-caption" id="histYCap">Figure 8.2 — Histogram of Y.</figcaption>
+    </figure>
+    <figure class="fig">
+      <div id="scatter"></div>
+      <figcaption class="figure-caption">Figure 8.3 — Scatter plot of Y against X with the fitted least-squares line.</figcaption>
+    </figure>
+    <div id="corrOut" class="math-out" aria-live="polite"></div>
+    <h3>8.6&ensp;Interpretation</h3>
+    <div id="interpOut"></div>
+    <h3>8.7&ensp;Conclusion</h3>
+    <div id="concOut"></div>
+  </section>
+
+  <!-- ==================== 9 ==================== -->
+  <section id="sec9" aria-labelledby="h9">
+    <h2 id="h9"><span class="sec-num">9</span>Self-check</h2>
+    <p>Practice with questions generated at random from the passenger list. Type a decimal answer (four decimals are compared with tolerance 0.001); independence questions are answered with yes/no.</p>
+    <div class="panel" id="quizPanel">
+      <div class="controls-row">
+        <button type="button" id="quizNew" class="btn">New question</button>
+        <span class="quiz-score" id="quizScore">Score: 0 / 0</span>
+      </div>
+      <div id="quizBox" aria-live="polite"></div>
+      <div class="controls-row" id="quizAnswerRow"></div>
+      <div id="quizResult" aria-live="polite"></div>
+      <div class="controls-row"><button type="button" id="quizShow" class="btn btn-quiet" hidden>Show solution</button></div>
+      <div id="quizSolution"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 10 ==================== -->
+  <section id="sec10" aria-labelledby="h10">
+    <h2 id="h10"><span class="sec-num">10</span>Formula reference</h2>
+    <p>Every formula used on this page, grouped as in the course syllabus. Each entry names the section where it is applied.</p>
+    <div id="formulaRef"></div>
+  </section>
+
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Data: <a href="https://hbiostat.org/data/">titanic3, Vanderbilt University Department of Biostatistics</a>. All values are computed in your browser from the raw passenger list; open the page source to inspect the calculation code.</p>
+  </div>
+</footer>
+
+<script src="data/titanic.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="js/prob.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
